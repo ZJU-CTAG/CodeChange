@@ -1,0 +1,4529 @@
+ID: 1851
+Diff:
+public ByteBuf duplicate(){
+
+@Override
+public boolean getBoolean(int index){
+- checkIndex(index);
++ checkIndex(index,1);
+return buffer.getBoolean(index);
+}
+
+@Override
+public byte getByte(int index){
+- checkIndex(index);
++ checkIndex(index,1);
+return buffer.getByte(index);
+}
+
+@Override
+public short getUnsignedByte(int index){
+- checkIndex(index);
++ checkIndex(index,1);
+return buffer.getUnsignedByte(index);
+}
+
+public void writeDouble(double value){
+throw new UnreplayableOperationException();
+}
+
+- private void checkIndex(int index){
+- if(index>buffer.writerIndex()){
+- throw REPLAY;
+- }
+- }
+-
+private void checkIndex(int index,int length){
+if(index+length>buffer.writerIndex()){
+throw REPLAY;
+new file mode 100644
+index 00000000000..2d3f15b2cb0
+mmm/dev/null
+
++ /*
++ * Copyright 2012 The Netty Project
++ *
++ * The Netty Project licenses this file to you under the Apache License,
++ * version 2.0(the"License");you may not use this file except in compliance
++ * with the License.You may obtain a copy of the License at:
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing,software
++ * distributed under the License is distributed on an"AS IS"BASIS,WITHOUT
++ * WARRANTIES OR CONDITIONS OF ANY KIND,either express or implied.See the
++ * License for the specific language governing permissions and limitations
++ * under the License.
++ */
++ package io.netty.handler.codec;
++
++ import static org.junit.Assert.assertEquals;
++ import static org.junit.Assert.assertTrue;
++ import io.netty.buffer.ByteBuf;
++ import io.netty.buffer.Unpooled;
++ import io.netty.util.CharsetUtil;
++ import io.netty.util.Signal;
++
++ import org.junit.Test;
++
++ public class ReplayingDecoderBufferTest{
++
++ /* *
++ * See https://github.com/netty/netty/issues/445
++ */
++ @Test
++ public void testGetUnsignedByte(){
++ ReplayingDecoderBuffer buffer=new ReplayingDecoderBuffer(Unpooled.copiedBuffer("TestBuffer",CharsetUtil.ISO_8859_1));
++
++ boolean error;
++ int i=0;
++ try{
++ for(;;){
++ buffer.getUnsignedByte(i);
++ i++;
++ }
++ }catch(Signal e){
++ error=true;
++ }
++
++ assertTrue(error);
++ assertEquals(10,i);
++ }
++
++ /* *
++ * See https://github.com/netty/netty/issues/445
++ */
++ @Test
++ public void testGetByte(){
++ ReplayingDecoderBuffer buffer=new ReplayingDecoderBuffer(Unpooled.copiedBuffer("TestBuffer",CharsetUtil.ISO_8859_1));
++
++ boolean error;
++ int i=0;
++ try{
++ for(;;){
++ buffer.getByte(i);
++ i++;
++ }
++ }catch(Signal e){
++ error=true;
++ }
++
++ assertTrue(error);
++ assertEquals(10,i);
++ }
++
++ /* *
++ * See https://github.com/netty/netty/issues/445
++ */
++ @Test
++ public void testGetBoolean(){
++ ByteBuf buf=Unpooled.buffer(10);
++ while(buf.writable()){
++ buf.writeBoolean(true);
++ }
++ ReplayingDecoderBuffer buffer=new ReplayingDecoderBuffer(buf);
++
++ boolean error;
++ int i=0;
++ try{
++ for(;;){
++ buffer.getBoolean(i);
++ i++;
++ }
++ }catch(Signal e){
++ error=true;
++ }
++
++ assertTrue(error);
++ assertEquals(10,i);
++ }
++
++ }
+
+Language: java
+Generated Outputs:
+- SLM: Fix issue - ReplayingDecoderBuffer is not thread safe
+
+- ICL: BAEL - 3900:Netty - README file revert + required changes
+
+- PEFT: [Netty - 4.0.0 - Beta 1]Added checkIndex()to ByteBuf and ByteBufHolder
+
+- NL: Fix ArrayIndexOutOfBoundsException in ReplayDecoderBuffer which could happen when calling getByte(..)or getUnsignedByte(..).See
+
+Fix/issue, 具体内容，getByte位置，调用
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness:  3
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 341
+Diff:
+public ConfiguredTarget create(RuleContext ruleContext)
+new Runfiles.Builder(ruleContext.getWorkspaceName())
+.addTransitiveArtifacts(filesToBuild)
+.build()))
+- .addNativeDeclaredProvider(
+- new AndroidInstrumentationInfoProvider(targetApk,instrumentationApk))
++ .addNativeDeclaredProvider(new AndroidInstrumentationInfo(targetApk,instrumentationApk))
+.build();
+}
+
+similarity index 72%
+rename from src/main/java/com/google/devtools/build/lib/rules/android/AndroidInstrumentationInfoProvider.java
+rename to src/main/java/com/google/devtools/build/lib/rules/android/AndroidInstrumentationInfo.java
+
+//limitations under the License.
+package com.google.devtools.build.lib.rules.android;
+
+- import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.actions.Artifact;
+import com.google.devtools.build.lib.concurrent.ThreadSafety.Immutable;
+import com.google.devtools.build.lib.packages.NativeInfo;
+
+* AndroidInstrumentationTest}.
+*/
+@Immutable
+- public class AndroidInstrumentationInfoProvider extends NativeInfo{
++ public class AndroidInstrumentationInfo extends NativeInfo{
+
+private static final String SKYLARK_NAME="AndroidInstrumentationInfo";
+- static final NativeProvider<AndroidInstrumentationInfoProvider>ANDROID_INSTRUMENTATION_INFO=
+- new NativeProvider<AndroidInstrumentationInfoProvider>(
+- AndroidInstrumentationInfoProvider.class,SKYLARK_NAME){};
++ static final NativeProvider<AndroidInstrumentationInfo>PROVIDER=
++ new NativeProvider<AndroidInstrumentationInfo>(
++ AndroidInstrumentationInfo.class,SKYLARK_NAME){};
+
+private final Artifact targetApk;
+private final Artifact instrumentationApk;
+
+- public AndroidInstrumentationInfoProvider(Artifact targetApk,Artifact instrumentationApk){
+- super(ANDROID_INSTRUMENTATION_INFO,ImmutableMap.<String,Object>of());
++ public AndroidInstrumentationInfo(Artifact targetApk,Artifact instrumentationApk){
++ super(PROVIDER);
+this.targetApk=targetApk;
+this.instrumentationApk=instrumentationApk;
+}
+
+public Artifact getTargetApk(){
+- return targetApk;
++ return targetApk;
+}
+
+public Artifact getInstrumentationApk(){
+private static Substitution artifactListSubstitution(String key,Iterable<Artifa
+private static Iterable<Artifact>getTargetApks(RuleContext ruleContext){
+return Iterables.transform(
+ruleContext.getPrerequisites(
+- "instrumentations",
+- Mode.TARGET,
+- AndroidInstrumentationInfoProvider.ANDROID_INSTRUMENTATION_INFO),
+- AndroidInstrumentationInfoProvider::getTargetApk);
++ "instrumentations",Mode.TARGET,AndroidInstrumentationInfo.PROVIDER),
++ AndroidInstrumentationInfo::getTargetApk);
+}
+
+/* *
+private static Substitution artifactListSubstitution(String key,Iterable<Artifa
+private static Iterable<Artifact>getInstrumentationApks(RuleContext ruleContext){
+return Iterables.transform(
+ruleContext.getPrerequisites(
+- "instrumentations",
+- Mode.TARGET,
+- AndroidInstrumentationInfoProvider.ANDROID_INSTRUMENTATION_INFO),
+- AndroidInstrumentationInfoProvider::getInstrumentationApk);
++ "instrumentations",Mode.TARGET,AndroidInstrumentationInfo.PROVIDER),
++ AndroidInstrumentationInfo::getInstrumentationApk);
+}
+
+/* * The support APKs from the{@code support_apks}and{@code fixtures}attributes.*/
+public void testTargetAndInstrumentationAreBinaries()throws Exception{
+")");
+ConfiguredTarget instrumentation=getConfiguredTarget("//javatests/com/app/instrumentation");
+assertThat(instrumentation).isNotNull();
+- AndroidInstrumentationInfoProvider instrumentationProvider=
+- instrumentation.get(AndroidInstrumentationInfoProvider.ANDROID_INSTRUMENTATION_INFO);
++ AndroidInstrumentationInfo instrumentationProvider=
++ instrumentation.get(AndroidInstrumentationInfo.PROVIDER);
+assertThat(instrumentationProvider.getTargetApk()).isNotNull();
+assertThat(instrumentationProvider.getTargetApk().prettyPrint())
+.isEqualTo("javatests/com/app/instrumentation/instrumentation-target.apk");
+public void testTargetAndInstrumentationAreLibraries()throws Exception{
+")");
+ConfiguredTarget instrumentation=getConfiguredTarget("//javatests/com/app/instrumentation");
+assertThat(instrumentation).isNotNull();
+- AndroidInstrumentationInfoProvider instrumentationProvider=
+- instrumentation.get(AndroidInstrumentationInfoProvider.ANDROID_INSTRUMENTATION_INFO);
++ AndroidInstrumentationInfo instrumentationProvider=
++ instrumentation.get(AndroidInstrumentationInfo.PROVIDER);
+
+Artifact targetApk=instrumentationProvider.getTargetApk();
+assertThat(targetApk).isNotNull();
+private static Artifact getDeviceFixtureScript(ConfiguredTarget deviceScriptFixt
+}
+
+private static Artifact getInstrumentationApk(ConfiguredTarget instrumentation){
+- return instrumentation
+- .get(AndroidInstrumentationInfoProvider.ANDROID_INSTRUMENTATION_INFO)
+- .getInstrumentationApk();
++ return instrumentation.get(AndroidInstrumentationInfo.PROVIDER).getInstrumentationApk();
+}
+
+private static Artifact getTargetApk(ConfiguredTarget instrumentation){
+- return instrumentation
+- .get(AndroidInstrumentationInfoProvider.ANDROID_INSTRUMENTATION_INFO)
+- .getTargetApk();
++ return instrumentation.get(AndroidInstrumentationInfo.PROVIDER).getTargetApk();
+}
+}
+
+Language: java
+Generated Outputs:
+- SLM: Rename AndroidInstrumentationInfoProvider toPROVIDER
+
+- ICL: Adds a new provider to the AndroidInstrumentationInfoProvider to provide the target APK.
+
+- PEFT: Add AndroidInstrumentationInfo to the public API.
+
+- NL: Naming style fix for AndroidInstrumentationInfo(Provider).
+
+fix, naming style, AndroidInstrumentationInfo/AndroidInstrumentationInfoProvider
+
+Evaluations:
+- Model: SLM
+  Adequacy: 2
+  Conciseness: 4
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 2
+  Conciseness: 4
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 983
+Diff:
+public void stop(Platform platform)throws Exception{
+//Otherwise,if some threads take a while to terminate,this could lead
+//to a misleading rate getting reported.
+this.statusUpdaterFuture.cancel(false);
++ this.statusUpdaterExecutor.shutdown();
+this.statusUpdaterExecutor.awaitTermination(1,TimeUnit.DAYS);
+this.statusUpdaterExecutor=null;
+new StatusUpdater().run();
+
+Language: java
+Generated Outputs:
+- SLM: Ensure the StatusUpdater thread is shut down
+
+- ICL: Fix the bug that the statusUpdaterExecutor is not shutdown.
+
+- PEFT: Fix StatusUpdater shutdown
+
+- NL: MINOR:ConnectionStressWorker:add missing executor shutdown()
+
+add, executor,shutdown
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1950
+Diff:
+Require-Bundle:org.eclipse.core.runtime,
+org.jkiss.dbeaver.ui.navigator,
+org.jkiss.dbeaver.ui.editors.base
+Export-Package:org.jkiss.dbeaver.tasks.ui,
++ org.jkiss.dbeaver.tasks.ui.registry,
+org.jkiss.dbeaver.tasks.ui.wizard,
+org.jkiss.dbeaver.tasks.ui.view,
+org.jkiss.dbeaver.tools.registry,
+
+Language: java
+Generated Outputs:
+- SLM: dependency on Tomcat registry
+
+- ICL: Add package org.jkiss.dbeaver.tasks.ui.registry
+
+- PEFT: Added tasks UI registry
+
+- NL: Tasks ui manifest
+
+add, package, Tasks
+
+Evaluations:
+- Model: SLM
+  Adequacy: 2
+  Conciseness: 3
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 790
+Diff:
+uint64_t GetMillisecondsSinceProcessStart(){
+}
+
+void SetScheduling(bool batch_cpu_scheduling,int io_nice_level){
+- //Move ourself into a low priority CPU scheduling group if the
+- //machine is configured appropriately.Fail silently,because this
+- //isn't available on all kernels.
+-
+- if(io_nice_level>=0){
+- if(blaze_util::sys_ioprio_set(
+- IOPRIO_WHO_PROCESS,getpid(),
+- IOPRIO_PRIO_VALUE(IOPRIO_CLASS_BE,io_nice_level))<0){
+- pdie(blaze_exit_code::INTERNAL_ERROR,
+- "ioprio_set()with class%d and level%d failed",IOPRIO_CLASS_BE,
+- io_nice_level);
+- }
+- }
++ //Stubbed out so we can compile for FreeBSD.
+}
+
+string GetProcessCWD(int pid){
+
+Language: java
+Generated Outputs:
+- SLM: Remove the ioprio_set()method on FreeBSD.
+
+- ICL: Adds a new function to get the current working directory of a process.
+
+- PEFT: Stub out SetScheduling() for FreeBSD.
+
+- NL: cpp:remove blaze_util::sys_ioprio_set()call from FreeBSD port
+
+移除、XXX方法、内容、FreeBSD、编译
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 213
+Diff:
+
+
+import com.google.common.base.Strings;
+import com.google.common.eventbus.Subscribe;
++ import io.shardingsphere.api.config.RuleConfiguration;
+import io.shardingsphere.core.constant.properties.ShardingProperties;
+import io.shardingsphere.core.constant.properties.ShardingPropertiesConstant;
+import io.shardingsphere.core.constant.transaction.TransactionType;
+public void init(final Map<String,Map<String,DataSourceParameter>>schemaDataS
+*@param props properties
+*@param isUsingRegistry is using registry or not
+*/
+- public void init(final Map<String,Map<String,DataSourceParameter>>schemaDataSources,
+- final Map<String,YamlRuleConfiguration>schemaRules,final Authentication authentication,final Properties props,final boolean isUsingRegistry){
++ public void init(final Map<String,Map<String,DataSourceParameter>>schemaDataSources,
++ final Map<String,RuleConfiguration>schemaRules,final Authentication authentication,final Properties props,final boolean isUsingRegistry){
+initServerConfiguration(authentication,props);
+- for(Entry<String,YamlRuleConfiguration>entry:schemaRules.entrySet()){
++ for(Entry<String,RuleConfiguration>entry:schemaRules.entrySet()){
+String schemaName=entry.getKey();
+schemaNames.add(schemaName);
+shardingSchemas.put(schemaName,
+
+Language: java
+Generated Outputs:
+- SLM: rename to RuleConfiguration
+
+- ICL: MINOR:Fix state transition diagram for stream threads()
+
+- PEFT: modify init method
+
+- NL: delete ShardingSchema()
+
+rename，xx方法
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1826
+Diff:
+
+# # Spring REST Example Project
+
+- # # # The Course
++ # # # The Course
+The"REST With Spring"Classes:http://bit.ly/restwithspring
+
+- # # # Relevant Articles:
++ # # # Relevant Articles
++
++ -[Concurrent Test Execution in Spring 5](http://www.baeldung.com/spring-5-concurrent-tests)
+
+Language: java
+Generated Outputs:
+- SLM: Merge pull request from eugenp/BAEL - 513
+
+- ICL: [Flink - 15135][e2e][Mesos]Adding Dockerfiles relevant to Mesos setup
+
+- PEFT: Merge pull request from eugenp/master
+
+- NL: Update README.md()
+
+
+add, url, 具体内容
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 2
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 565
+Diff:
+
+
+package com.google.common.collect.testing.testers;
+
+- import static com.google.common.collect.testing.features.CollectionFeature.ALLOWS_NULL_QUERIES;
+import static com.google.common.collect.testing.features.CollectionSize.ZERO;
+import static com.google.common.collect.testing.features.MapFeature.ALLOWS_NULL_KEYS;
++ import static com.google.common.collect.testing.features.MapFeature.ALLOWS_NULL_KEY_QUERIES;
+
+import com.google.common.annotations.GwtCompatible;
+import com.google.common.collect.testing.AbstractMapTester;
+import com.google.common.collect.testing.WrongType;
+- import com.google.common.collect.testing.features.CollectionFeature;
+import com.google.common.collect.testing.features.CollectionSize;
+import com.google.common.collect.testing.features.MapFeature;
+
+public void testGet_no(){
+assertNull("get(notPresent)should return null",get(samples.e3.getKey()));
+}
+
+- @CollectionFeature.Require(ALLOWS_NULL_QUERIES)
++ @MapFeature.Require(ALLOWS_NULL_KEY_QUERIES)
+public void testGet_nullNotContainedButAllowed(){
+assertNull("get(null)should return null",get(null));
+}
+
+- @CollectionFeature.Require(absent=ALLOWS_NULL_QUERIES)
++ @MapFeature.Require(absent=ALLOWS_NULL_KEY_QUERIES)
+public void testGet_nullNotContainedAndUnsupported(){
+try{
+assertNull("get(null)should return null or throw",get(null));
+
+Language: java
+Generated Outputs:
+- SLM: Rename CollectionFeature to@MapFeature.
+
+- ICL: Adds"- MapFeature.Require(ALLOWS_NULL_KEY_QUERIES)"to the testGet_nullNotContainedAndUnsupported test to allow null keys to be queried.
+
+- PEFT: [JDK - 8025579]Added MapFeature.ALLOWS_NULL_KEY_QUERIES to tester.
+
+- NL: Fix CollectionFeature.ALLOWS_NULL_QUERIES to MapFeature.ALLOWS_NULL_KEY_QUERIES.
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 354
+Diff:
+
+import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;
+import org.jkiss.dbeaver.model.struct.*;
+import org.jkiss.dbeaver.model.struct.rdb.DBSTable;
+- import org.jkiss.dbeaver.model.struct.rdb.DBSTableColumn;
+import org.jkiss.dbeaver.model.struct.rdb.DBSTableIndex;
+import org.jkiss.utils.CommonUtils;
+
+public static ERDEntity fromObject(DBRProgressMonitor monitor,EntityDiagram dia
+//Find PK or unique key
+DBSEntityConstraint uniqueId=null;
+//DBSEntityConstraint uniqueIndex=null;
+- for(DBSEntityConstraint id:entity.getConstraints(monitor)){
++ for(DBSEntityConstraint id:CommonUtils.safeCollection(entity.getConstraints(monitor))){
+if(id instanceof DBSEntityReferrer&&id.getConstraintType()==DBSEntityConstraintType.PRIMARY_KEY){
+return DBUtils.getEntityAttributes(monitor,(DBSEntityReferrer)id);
+}else if(id.getConstraintType().isUnique()){
+
+Language: java
+Generated Outputs:
+- SLM: Merge pull request from p91paul/devel
+
+- ICL: Fix state transition diagram for stream threads()
+
+- PEFT: Fix NPE in ERDUtils.fromObject()
+
+- NL: Entity unique key searching fix(handle missing constraints)
+
+fix,Handle, key searching,  missing constraints
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1962
+Diff:
+
+import hudson.Launcher.ProcStarter;
+import hudson.model.TaskListener;
+import hudson.remoting.Channel;
++ import hudson.util.ClassLoaderSanityThreadFactory;
+import hudson.util.DaemonThreadFactory;
+import hudson.util.ExceptionCatchingThreadFactory;
+import hudson.util.NamingThreadFactory;
+protected Proc(){}
+@CheckForNull
+public abstract OutputStream getStdin();
+
+- private static final ExecutorService executor=Executors.newCachedThreadPool(new ExceptionCatchingThreadFactory(new NamingThreadFactory(new DaemonThreadFactory(),"Proc.executor")));
++ private static final ExecutorService executor=Executors.newCachedThreadPool(new ExceptionCatchingThreadFactory(new NamingThreadFactory(new ClassLoaderSanityThreadFactory(new DaemonThreadFactory()),"Proc.executor")));
+
+/* *
+* Like{@link # join}but can be given a maximum time to wait.
+
+Language: java
+Generated Outputs:
+- SLM: use ClassLoaderSanityThreadFactory to fix build.
+
+- ICL: Add code to Proc
+
+- PEFT: [JENKINS - 25997]Make Proc.executor thread safe
+
+- NL: [JENKINS - 57725]- Wrap Proc.executor in ClassLoaderSanityThreadFactory()
+
+wrap, executor, ClassLoaderSanityThreadFactory
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1985
+Diff:
+@@-1+1@@
+- version=1.1.7-SNAPSHOT
++ version=1.1.7
+
+Language: java
+Generated Outputs:
+- SLM: [Gradle Release Plugin]- pre tag commit:'hystrix - 1.1.7'.
+
+- ICL: Merge branch'master' of github.com:dakrone/add
+
+- PEFT: [maven - release - plugin]prepare release 1.1.7
+
+- NL: Gradle Release Plugin - pre tag commit:'hystrix - 1.1.7'.
+
+tag, Release
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 648
+Diff:
+https://github.com/eishay/jvm-serializers/wiki
+<dependency>
+<groupId>com.alibaba</groupId>
+<artifactId>fastjson</artifactId>
+- <version>1.2.44</version>
++ <version>1.2.46</version>
+</dependency>
+` ` `
+
+https://github.com/eishay/jvm-serializers/wiki
+<dependency>
+<groupId>com.alibaba</groupId>
+<artifactId>fastjson</artifactId>
+- <version>1.1.67.android</version>
++ <version>1.1.68.android</version>
+</dependency>
+` ` `
+
+# # Gradle via JCenter
+
+` ` ` groovy
+- compile'com.alibaba:fastjson:1.2.44'
++ compile'com.alibaba:fastjson:1.2.46'
+` ` `
+
+` ` ` groovy
+- compile'com.alibaba:fastjson:1.1.67.android'
++ compile'com.alibaba:fastjson:1.1.68.android'
+` ` `
+
+Please see this[Wiki Download Page][Wiki]for more repository infos.
+
+Language: java
+Generated Outputs:
+- SLM: 1.1.68.android
+
+- ICL: Merge pull request from square/jwilson.0525.releasing_script
+
+- PEFT: Update to 1.2.46
+
+- NL: Update maven dependencies
+
+update, dependencies
+
+Evaluations:
+- Model: SLM
+  Adequacy: 2
+  Conciseness: 4
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 826
+Diff:
+
+@SneakyThrows
+public ExtractorRuleDefinitionEntity load(final String extractorRuleDefinitionFile){
+InputStream inputStream=ExtractorRuleDefinitionEntityLoader.class.getClassLoader().getResourceAsStream(extractorRuleDefinitionFile);
+- Preconditions.checkNotNull(inputStream,"Cannot load extractor rule definition file:%s,",extractorRuleDefinitionFile);
++ Preconditions.checkNotNull(inputStream,"Cannot load extractor rule definition file:%s,",extractorRuleDefinitionFile);
+return(ExtractorRuleDefinitionEntity)JAXBContext.newInstance(ExtractorRuleDefinitionEntity.class).createUnmarshaller().unmarshal(inputStream);
+}
+}
+
+@SneakyThrows
+public FillerRuleDefinitionEntity load(final String fillerRuleDefinitionFile){
+InputStream inputStream=FillerRuleDefinitionEntityLoader.class.getClassLoader().getResourceAsStream(fillerRuleDefinitionFile);
+- Preconditions.checkNotNull(inputStream,"Cannot load SQL filler rule definition file:%s,",fillerRuleDefinitionFile);
++ Preconditions.checkNotNull(inputStream,"Cannot load SQL filler rule definition file:%s,",fillerRuleDefinitionFile);
+return(FillerRuleDefinitionEntity)JAXBContext.newInstance(FillerRuleDefinitionEntity.class).createUnmarshaller().unmarshal(inputStream);
+}
+}
+
+@SneakyThrows
+public SQLStatementRuleDefinitionEntity load(final String sqlStatementRuleDefinitionFile){
+InputStream inputStream=SQLStatementRuleDefinitionEntityLoader.class.getClassLoader().getResourceAsStream(sqlStatementRuleDefinitionFile);
+- Preconditions.checkNotNull(inputStream,"Cannot load SQL statement rule definition file:%s,",sqlStatementRuleDefinitionFile);
++ Preconditions.checkNotNull(inputStream,"Cannot load SQL statement rule definition file:%s,",sqlStatementRuleDefinitionFile);
+return(SQLStatementRuleDefinitionEntity)JAXBContext.newInstance(SQLStatementRuleDefinitionEntity.class).createUnmarshaller().unmarshal(inputStream);
+}
+}
+
+Language: java
+Generated Outputs:
+- SLM: for checkstyle
+
+- ICL: Adds"- fno - autolink"to ObjC compilation actions to avoid using the autolink feature, as it doesn't play very well with bazel's deduplication of shared dependencies.
+
+- PEFT: add checkNotNull()
+
+- NL: for, fix log typo
+
+fix, typo, log
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 4
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1380
+Diff:
+def_add(_layout,dest,src,component=None,with_sources=False):
+
+# Add release file
+_sorted_suites=sorted(mx.suites(),key=lambda s:s.name)
+-
+- _commit_info={}
+- for_s in_sorted_suites:
+- if_s.vc:
+- _info=_s.vc.parent_info(_s.vc_dir)
+- _commit_info[_s.name]={
+- "commit.rev":_s.vc.parent(_s.vc_dir),
+- "commit.committer":_info['committer']if_s.vc.kind!='binary'else'unknown',
+- "commit.committer-ts":_info['committer-ts'],
+- }
+-
+- _metadata="""
+- OS_NAME=<os>
+- OS_ARCH=<arch>
+- SOURCE="{source}"
+- COMMIT_INFO={commit_info}
+- GRAALVM_VERSION={version}""".format(
+- source=''.join(['{}:{}'.format(_s.name,_s.version())for_s in_sorted_suites]),
+- commit_info=json.dumps(_commit_info,sort_keys=True),
+- version=_suite.release_version()
+- )
++ _metadata=self._get_metadata(_sorted_suites)
+_add(layout,"<jdk_base>/release","string:{}".format(_metadata))
+
+# Add the rest of the GraalVM
+def_add_link(_dest,_target):
+if isinstance(_component,mx_sdk.GraalVmJvmciComponent)and_component.graal_compiler:
+has_graal_compiler=True
+
++ if isinstance(_component,mx_sdk.GraalVmLanguage)and not is_graalvm:
++ # add language-specific release file
++ _metadata=self._get_metadata([_component.suite])
++ _add(layout,_component_base+'release',"string:{}".format(_metadata))
++
+if has_graal_compiler:
+_add(layout,'<jdk_base>/jre/lib/jvmci/compiler-name','string:graal')
+
+def_add_link(_dest,_target):
+self.reset_user_group=True
+mx.logv("'{}'has layout:\n{}".format(self.name,pprint.pformat(self.layout)))
+
++ def_get_metadata(self,suites):
++ '''
++ :type suites:list[str]
++ :return:
++ '''
++ _commit_info={}
++ for_s in suites:
++ if_s.vc:
++ _info=_s.vc.parent_info(_s.vc_dir)
++ _commit_info[_s.name]={
++ "commit.rev":_s.vc.parent(_s.vc_dir),
++ "commit.committer":_info['committer']if_s.vc.kind!='binary'else'unknown',
++ "commit.committer-ts":_info['committer-ts'],
++ }
++ _metadata="""\
++ OS_NAME=<os>
++ OS_ARCH=<arch>
++ SOURCE="{source}"
++ COMMIT_INFO={commit_info}
++ GRAALVM_VERSION={version}""".format(
++ source=''.join(['{}:{}'.format(_s.name,_s.version())for_s in suites]),
++ commit_info=json.dumps(_commit_info,sort_keys=True),
++ version=_suite.release_version()
++ )
++ return_metadata
++
+
+class GraalVmLayoutDistribution(BaseGraalVmLayoutDistribution,mx.LayoutTARDistribution):# pylint:disable=R0901
+def__init__(self,base_name,base_layout,theLicense=None,* * kw_args):
+
+Language: java
+Generated Outputs:
+- SLM: Merge pull request from mrigger/release - component
+
+- ICL: [JENKINS - 61496]update page footer()
+
+- PEFT: [GR - 1599]Add language specific release file to GraalVM distribution
+
+- NL: [GR - 10001]GraalVM installables should have a release file.
+
+release, GraalVM installables , 具体内容
+
+Evaluations:
+- Model: SLM
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 4
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1337
+Diff:
+public void loadBeanDefinitions(Set<ConfigurationClass>configurationModel){
+*/
+private void loadBeanDefinitionsForConfigurationClass(ConfigurationClass configClass){
+doLoadBeanDefinitionForConfigurationClassIfNecessary(configClass);
+-
+for(ConfigurationClassMethod method:configClass.getMethods()){
+loadBeanDefinitionsForModelMethod(method);
+}
+-
+loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+}
+
+private void doLoadBeanDefinitionForConfigurationClassIfNecessary(ConfigurationC
+GenericBeanDefinition configBeanDef=new GenericBeanDefinition();
+String className=configClass.getMetadata().getClassName();
+configBeanDef.setBeanClassName(className);
+- if(checkConfigurationClassCandidate(configBeanDef,this.metadataReaderFactory)){
++ if(checkConfigurationClassCandidate(configBeanDef,this.metadataReaderFactory)){
+String configBeanName=BeanDefinitionReaderUtils.registerWithGeneratedName(configBeanDef,this.registry);
+configClass.setBeanName(configBeanName);
+if(logger.isDebugEnabled()){
+private void doLoadBeanDefinitionForConfigurationClassIfNecessary(ConfigurationC
+}
+
+/* *
+- * Reads a particular{@link ConfigurationClassMethod},registering bean definitions with
+- * the BeanDefinitionRegistry based on its contents.
++ * Reads a particular{@link ConfigurationClassMethod},registering bean definitions
++ * with the BeanDefinitionRegistry based on its contents.
+*/
+private void loadBeanDefinitionsForModelMethod(ConfigurationClassMethod method){
+ConfigurationClass configClass=method.getConfigurationClass();
+protected void doProcessConfigurationClass(ConfigurationClass configClass,Annot
+}
+}
+Set<MethodMetadata>beanMethods=metadata.getAnnotatedMethods(Bean.class.getName());
+- for(MethodMetadata methodMetadata:beanMethods){
+- configClass.addMethod(new ConfigurationClassMethod(methodMetadata,configClass));
++ for(MethodMetadata beanMethod:beanMethods){
++ configClass.addMethod(new ConfigurationClassMethod(beanMethod,configClass));
+}
+}
+
+
+<xsd:documentation><![CDATA[
+Specifies the java.util.Executor instance to use when invoking asynchronous methods.
+If not provided,an instance of org.springframework.core.task.SimpleAsyncTaskExecutor
+- will be used by default
++ will be used by default.
+]]></xsd:documentation>
+</xsd:annotation>
+</xsd:attribute>
+
+Language: java
+Generated Outputs:
+- SLM: Polish
+
+- ICL: BAEL - 3896:OpenAPI JSON Objects in Query Params - README file revert + required changes
+
+- PEFT: Fix typo in javadoc for ConfigurationClassBeanDefinitionDocumentation
+
+- NL: polishing
+
+Fix/polish, typo,具体内容
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1322
+Diff:
+
+@SuppressFBWarnings(value="Se",justification="DynamicHub must implement Serializable for compatibility with java.lang.Class,not because of actual serialization")
+public final class DynamicHub implements JavaKind.FormatWithToString,AnnotatedElement,java.lang.reflect.Type,GenericDeclaration,Serializable{
+
++ @Substitute//
++ @TargetElement(name="EMPTY_CLASS_ARRAY",onlyWith=JDK9OrLater.class)//
++ private static Class<?>[]emptyClassArray=new Class<?>[0];
++
+/* Value copied from java.lang.Class.*/
+private static final int SYNTHETIC=0x00001000;
+
+private Object getDeclaringClass(){
+
+@Substitute
+public DynamicHub[]getInterfaces(){
+- if(interfacesEncoding==null){
++ return getInterfaces(this,true);
++ }
++
++ @Substitute
++ @TargetElement(onlyWith=JDK9OrLater.class)
++ private DynamicHub[]getInterfaces(boolean cloneArray){
++ return getInterfaces(this,cloneArray);
++ }
++
++ private static DynamicHub[]getInterfaces(DynamicHub hub,boolean cloneArray){
++ if(hub.interfacesEncoding==null){
+return new DynamicHub[0];
+- }else if(interfacesEncoding instanceof DynamicHub){
+- return new DynamicHub[]{(DynamicHub)interfacesEncoding};
++ }else if(hub.interfacesEncoding instanceof DynamicHub){
++ return new DynamicHub[]{(DynamicHub)hub.interfacesEncoding};
+}else{
+/* The caller is allowed to modify the array,so we have to make a copy.*/
+- return((DynamicHub[])interfacesEncoding).clone();
++ return cloneArray?((DynamicHub[])hub.interfacesEncoding).clone():(DynamicHub[])hub.interfacesEncoding;
+}
+}
+
+private static Target_jdk_internal_reflect_ReflectionFactory getReflectionFactor
+@TargetElement(name="getMethod0",onlyWith=JDK9OrLater.class)
+private native Method getMethod0JDK9OrLater(@SuppressWarnings("hiding")String name,Class<?>[]parameterTypes);
+
++ @KeepOriginal
++ @TargetElement(onlyWith=JDK9OrLater.class)
++ private native Object getMethodsRecursive(@SuppressWarnings("hiding")String name,Class<?>[]parameterTypes,boolean includeStatic);
++
+@KeepOriginal
+@TargetElement(onlyWith=JDK8OrEarlier.class)
+private native Method privateGetMethodRecursive(@SuppressWarnings("hiding")String name,Class<?>[]parameterTypes,boolean includeStaticMethods,
+
+Language: java
+Generated Outputs:
+- SLM: Reimplementing clone of the dynamic hub interfaces array in Java
+
+- ICL: Adds support for JDK 9+
+
+- PEFT: [GR - 1119]Fix DynamicHub.getInterfaces()
+
+- NL: Update java.lang.Class substitutions for JDK11.
+
+update, java substitutions, 具体内容(interface)
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 3
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 286
+Diff:
+
+
+private static final IRegisterGroup[]NO_REGISTER_GROUPS=new IRegisterGroup[0];
+private static final IVariable[]NO_VARIABLES=new IVariable[0];
+- private final DBGStackFrame dbgStackFrame;
++
++ private final List<DatabaseVariable>variables=new ArrayList<DatabaseVariable>();
++
+private final DatabaseThread thread;
+- private final Object sessionKey;
++ private final DBGStackFrame dbgStackFrame;
+
+- public DatabaseStackFrame(DatabaseThread thread,DBGStackFrame dbgStackFrame,Object sessionKey){
++ private boolean refreshVariables=true;
++
++ public DatabaseStackFrame(DatabaseThread thread,DBGStackFrame dbgStackFrame){
+super(thread.getDatabaseDebugTarget());
+this.thread=thread;
+this.dbgStackFrame=dbgStackFrame;
+- this.sessionKey=sessionKey;
+}
+
+@Override
+public IThread getThread(){
+
+@Override
+public IVariable[]getVariables()throws DebugException{
+- try{
+- List<?extends DBGVariable<?>>dbgVariables=getController().getVariables(sessionKey);
+- if(dbgVariables.size()==0){
+- return NO_VARIABLES;
++ if(refreshVariables){
++ try{
++ List<?extends DBGVariable<?>>variables=getDatabaseDebugTarget().requestVariables();
++ rebuildVariables(variables);
++ }catch(DBGException e){
++ //TODO Auto-generated catch block
++ e.printStackTrace();
+}
+- List<DatabaseVariable>variables=new ArrayList<DatabaseVariable>();
++ }
++ if(variables.isEmpty()){
++ return NO_VARIABLES;
++ }
++ return(IVariable[])variables.toArray(new IVariable[variables.size()]);
++ }
++
++ protected void invalidateVariables(){
++ refreshVariables=true;
++ }
++
++ protected void rebuildVariables(List<?extends DBGVariable<?>>dbgVariables){
++ try{
++ variables.clear();
+for(DBGVariable<?>dbgVariable:dbgVariables){
+- DatabaseVariable e=new DatabaseVariable(getDatabaseDebugTarget(),dbgVariable);
+- variables.add(e);
++ DatabaseVariable variable=new DatabaseVariable(getDatabaseDebugTarget(),dbgVariable);
++ variables.add(variable);
+}
+- return(DatabaseVariable[])variables.toArray(new DatabaseVariable[variables.size()]);
+- }catch(DBGException e){
+- //TODO Auto-generated catch block
+- e.printStackTrace();
++ }finally{
++ refreshVariables=false;
+}
+- return NO_VARIABLES;
+}
+
+@Override
+
+import org.eclipse.debug.core.model.IBreakpoint;
+import org.eclipse.debug.core.model.IStackFrame;
+import org.eclipse.debug.core.model.IThread;
+- import org.eclipse.debug.core.model.IVariable;
+import org.jkiss.dbeaver.debug.DBGController;
+import org.jkiss.dbeaver.debug.DBGException;
+import org.jkiss.dbeaver.debug.DBGStackFrame;
+
+
+private boolean stepping=false;
+
+- private boolean fRefreshProperties=true;
+private List<DatabaseStackFrame>frames=new ArrayList<>(1);
+- private List<DatabaseStackFrame>cachedFrames;
+-
+- private List<DatabaseVariable>variables;
+
+public DatabaseThread(DatabaseDebugTarget target,Object sessionKey){
+super(target);
+public void stepReturn()throws DebugException{
+}
+
+private void aboutToResume(int detail,boolean stepping){
+- fRefreshProperties=true;
+- cachedFrames=new ArrayList<>(frames);
+frames.clear();
+setStepping(stepping);
+//setBreakpoints(null);
+public boolean hasStackFrames()throws DebugException{
+}
+
+public void rebuildStack(List<?extends DBGStackFrame>stackFrames){
+- //FIXME:AF:revisit this check
+- if(cachedFrames!=null&&(stackFrames.size()-1)/4!=cachedFrames.size()){
+- cachedFrames.clear();
+- cachedFrames=null;//stack size changed..do not preserve
+- }
+for(DBGStackFrame dbgStackFrame:stackFrames){
+addFrame(dbgStackFrame,sessionKey);
+}
+}
+
+private void addFrame(DBGStackFrame stackFrameId,Object sessionKey){
+- DatabaseStackFrame frame=getOldFrame();
+-
+- if(frame==null/*||!frame.getFilePath().equals(filePath)*/){
+- frame=new DatabaseStackFrame(this,stackFrameId,sessionKey);
+- }else{
+- //frame.setFilePath(filePath);
+- //frame.setId(stackFrameId);
+- //frame.setLineNumber(lineNumber);
+- //frame.setName(name);
+- }
++ DatabaseStackFrame frame=new DatabaseStackFrame(this,stackFrameId);
+frames.add(frame);
+}
+
+- private DatabaseStackFrame getOldFrame(){
+- if(cachedFrames==null){
+- return null;
+- }
+- DatabaseStackFrame frame=cachedFrames.remove(0);
+- if(cachedFrames.isEmpty()){
+- cachedFrames=null;
+- }
+- return frame;
+- }
+-
+@Override
+public int getPriority()throws DebugException{
+//no idea for now
+public void setStepping(boolean stepping){
+this.stepping=stepping;
+}
+
+- protected IVariable[]requestVariables()throws DebugException{
+- if(fRefreshProperties){
+- try{
+- List<?extends DBGVariable<?>>variables=getDatabaseDebugTarget().requestVariables();
+- rebuildVariables(variables);
+- }catch(DBGException e){
+- //TODO Auto-generated catch block
+- e.printStackTrace();
+- }
+- }
+- return(IVariable[])variables.toArray(new IVariable[variables.size()]);
+- }
+-
+- public void rebuildVariables(List<?extends DBGVariable<?>>dbgVariables){
++ protected List<?extends DBGVariable<?>>requestVariables()throws DebugException{
++ List<DBGVariable<?>>variables=new ArrayList<DBGVariable<?>>();
+try{
+- variables.clear();
+- for(DBGVariable<?>dbgVariable:dbgVariables){
+- DatabaseVariable variable=new DatabaseVariable(getDatabaseDebugTarget(),dbgVariable);
+- variables.add(variable);
+- }
+- }finally{
+- fRefreshProperties=false;
++ variables.addAll(getDatabaseDebugTarget().requestVariables());
++ }catch(DBGException e){
++ //TODO Auto-generated catch block
++ e.printStackTrace();
+}
++ return variables;
+}
+
+}
+
+Language: java
+Generated Outputs:
+- SLM: Variables refactoring
+
+- ICL: Adds a new method to the DatabaseStackFrame class to rebuild the variables list.
+
+- PEFT: Database stack frame variables refresh
+
+- NL: simplistic step handling
+
+(simplify, step, 具体Database)
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 3
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1575
+Diff:
+
+import org.mockito.MockitoAnnotations;
+
+import rx.observables.GroupedObservable;
++ import rx.operators.OperationAll;
+import rx.operators.OperationConcat;
+import rx.operators.OperationDefer;
+import rx.operators.OperationDematerialize;
+public T call(T t1,T t2){
+});
+}
+
++ /* *
++ * Determines whether all elements of an observable sequence satisfies a condition.
++ *@param sequence an observable sequence whose elements to apply the predicate to.
++ *@param predicate a function to test each element for a condition.
++ *@param<T>the type of observable.
++ *@return true if all elements of an observable sequence satisfies a condition;otherwise,false.
++ */
++ public static<T>Observable<Boolean>all(final Observable<T>sequence,final Func1<T,Boolean>predicate){
++ return_create(OperationAll.all(sequence,predicate));
++ }
++
++ /* *
++ * Determines whether all elements of an observable sequence satisfies a condition.
++ *@param sequence an observable sequence whose elements to apply the predicate to.
++ *@param predicate a function to test each element for a condition.
++ *@param<T>the type of observable.
++ *@return true if all elements of an observable sequence satisfies a condition;otherwise,false.
++ */
++ public static<T>Observable<Boolean>all(final Observable<T>sequence,Object predicate){
++ final FuncN_f=Functions.from(predicate);
++
++ return all(sequence,new Func1<T,Boolean>(){
++ @Override
++ public Boolean call(T t){
++ return(Boolean)_f.call(t);
++ }
++ });
++ }
++
+/* *
+* Returns an Observable that skips the first<code>num</code>items emitted by the source
+* Observable.You can ignore the first<code>num</code>items emitted by an Observable and attend
+public T call(Exception e){
+return scan(this,initialValue,accumulator);
+}
+
++ /* *
++ * Determines whether all elements of an observable sequence satisfies a condition.
++ *@param predicate a function to test each element for a condition.
++ *@return true if all elements of an observable sequence satisfies a condition;otherwise,false.
++ */
++ public Observable<Boolean>all(Func1<T,Boolean>predicate){
++ return all(this,predicate);
++ }
++
++ /* *
++ * Determines whether all elements of an observable sequence satisfies a condition.
++ *@param predicate a function to test each element for a condition.
++ *@return true if all elements of an observable sequence satisfies a condition;otherwise,false.
++ */
++ public Observable<Boolean>all(Object predicate){
++ return all(this,predicate);
++ }
++
+/* *
+* Returns an Observable that skips the first<code>num</code>items emitted by the source
+* Observable.
+
+Language: java
+Generated Outputs:
+- SLM: added all()and all(..)method to Observable
+
+- ICL: Operator all
+
+- PEFT: Added all()
+
+- NL: Updated Observable API
+
+update, api, all()
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1747
+Diff:
+
+SkyFunctionName.createHermetic("PACKAGE_ERROR_MESSAGE");
+public static final SkyFunctionName TARGET_MARKER=
+SkyFunctionName.createHermetic("TARGET_MARKER");
+- //Non-hermetic because accesses package locator
++ //Semi-hermetic because accesses package locator
+public static final SkyFunctionName TARGET_PATTERN=
+- SkyFunctionName.createNonHermetic("TARGET_PATTERN");
++ SkyFunctionName.createSemiHermetic("TARGET_PATTERN");
+static final SkyFunctionName TARGET_PATTERN_ERROR=
+SkyFunctionName.createHermetic("TARGET_PATTERN_ERROR");
+public static final SkyFunctionName PREPARE_DEPS_OF_PATTERNS=
+
+Language: java
+Generated Outputs:
+- SLM: Rename createNonHermetic to createSemiHermetic.
+
+- ICL: MINOR:Fix state transition diagram for stream threads()
+
+- PEFT: Make TARGET_PATTERN semi-hermetic.
+
+- NL: Make TARGET_PATTERN semi - hermetic.It's depended on by RegisteredToolchainsFunction, so it affects a lot.
+
+make, TARGET_PATTERN ,semi-hermetic
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 530
+Diff:
+have the required privileges on the source and destination indices,the
+
+IMPORTANT:You must use{kib}or this API to create a{transform}.
+Do not put a{transform}directly into any
+- `.data-frame-internal * ` indices using the Elasticsearch index API.
++ `.transform-internal * ` indices using the Elasticsearch index API.
+If{es}{security-features}are enabled,do not give users any
+- privileges on `.data-frame-internal * ` indices.
++ privileges on `.transform-internal * ` indices.If you used transforms
++ prior 7.5,also do not give users any privileges on
++ `.data-frame-internal * ` indices.
+
+[[put-transform-path-parms]]
+===={api-path-parms-title}
+
+Language: java
+Generated Outputs:
+- SLM: [DOCS]Only privileges on.transform - internal * indices if you used transforms prior 7.5
+
+- ICL: fixed formatting
+
+- PEFT: [DOCS]Update docs to reflect new index names
+
+- NL: update internal index name in documentation warning()
+
+update, name, documentation
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 3
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 4
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1820
+Diff:
+new file mode 100644
+index 00000000000..30c63cd5a87
+mmm/dev/null
+
++ # # # Relevant Articles:
++
++ -[HTTP/2 in Netty](https://www.baeldung.com/netty-http2)
+
+Language: java
+Generated Outputs:
+- SLM: Create README.md
+
+- ICL: [HTTP/2 in Netty](https://www.baeldung.com/netty-http2)
+
+- PEFT: Added article about HTTP/2 in Netty
+
+- NL: Create README.md
+
+url,README,create
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1262
+Diff:
+OpenJDK 64-Bit Server VM(build 25.0-b43-internal,mixed mode)
+%mx--vm client-nograal vm-version
+java version"1.7.0_25"
+Java(TM)SE Runtime Environment(build 1.7.0_25-b15)
+- OpenJDK 64-Bit Cleint VM(build 25.0-b43-internal,mixed mode)
++ OpenJDK 64-Bit Client VM(build 25.0-b43-internal,mixed mode)
+` ` `
+
+These configurations aim to match as closely as possible the
+
+Language: java
+Generated Outputs:
+- SLM: Clarify OpenJDK 64 -Bit Client VM reference.
+
+- ICL: Merge pull request from square/jwilson.0525.releasing_script
+
+- PEFT: Fix typo in README
+
+- NL: Fix typo.
+
+fix,typo
+
+Evaluations:
+- Model: SLM
+  Adequacy: 2
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 551
+Diff:
+EOF
+mkfifo$testfifo$sleepyfifo||fail"Couldn't create FIFOs under x"
+
+set-m
+- bazel$startup_opt build--package_path.//x:sleepy>&$TEST_log&
++ # TODO(b/37617303):make test UI-independent
++ bazel$startup_opt build--noexperimental_ui\
++ --package_path.//x:sleepy>&$TEST_log&
+local pid=$!
+
+echo"${PRODUCT_NAME}running in background with pid$pid"
+function test_no_package_loading_on_benign_workspace_file_changes(){
+
+echo'workspace(name="wsname1")'>WORKSPACE
+echo'sh_library(name="shname1")'>foo/BUILD
+- bazel query//foo:all>&"$TEST_log"||fail"Expected success"
++ # TODO(b/37617303):make tests UI-independent
++ bazel query--noexperimental_ui//foo:all>&"$TEST_log"\
++ ||fail"Expected success"
+expect_log"//foo:shname1"
+
+echo'sh_library(name="shname2")'>foo/BUILD
+- bazel query//foo:all>&"$TEST_log"||fail"Expected success"
++ # TODO(b/37617303):make tests UI-independent
++ bazel query--noexperimental_ui//foo:all>&"$TEST_log"\
++ ||fail"Expected success"
+expect_log"Loading package:foo"
+expect_log"//foo:shname2"
+
+echo'workspace(name="wsname1")'>WORKSPACE
+echo'# benign comment'>>WORKSPACE
+- bazel query//foo:all>&"$TEST_log"||fail"Expected success"
++ # TODO(b/37617303):make tests UI-independent
++ bazel query--noexperimental_ui//foo:all>&"$TEST_log"\
++ ||fail"Expected success"
+expect_not_log"Loading package:foo"
+expect_log"//foo:shname2"
+
+echo'workspace(name="wsname2")'>WORKSPACE
+- bazel query//foo:all>&"$TEST_log"||fail"Expected success"
++ # TODO(b/37617303):make tests UI-independent
++ bazel query--noexperimental_ui//foo:all>&"$TEST_log"\
++ ||fail"Expected success"
+expect_log"Loading package:foo"
+expect_log"//foo:shname2"
+}
+EOF
+
+chmod+x foo/bar/test.sh
+
+- bazel test--output_filter="dummy"foo/bar:test 2>stderr.txt
++ # TODO(b/37617303):make tests UI-independent
++ bazel test--noexperimental_ui--output_filter="dummy"foo/bar:test 2>stderr.txt
+grep"PASS://foo/bar:test"stderr.txt||fail"no PASSED message"
+}
+
+source"${CURRENT_DIR}/../integration_test_setup.sh"\
+
+set-eu
+
++ # TODO(b/37617303):make tests UI-independent
++ add_to_bazelrc"build--noexperimental_ui"
+add_to_bazelrc"build--workspace_status_command="$(which true)"--nostamp"
+add_to_bazelrc"build--show_progress_rate_limit=-1"
+add_to_bazelrc"build--genrule_strategy=local"
+
+Language: java
+Generated Outputs:
+- SLM: Test:add noexperimental_ui to test_no_package_loading_on_benign_workspace_file_changes
+
+- ICL: Merge pull request from nik9000/reinstall_test
+
+- PEFT: Merge pull request from jmmv - master
+
+- NL: Make tests independent of the default value for - - experimental_ui
+
+tests,noexperimental_ui,independent,make
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 3
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1329
+Diff:
+abrir em modo popup</string>
+<string name="metadata_cache_wipe_complete_notice">Cache de metadados foi limpo</string>
+<string name="playback_speed_control">Controle de Velocidade de reprodução</string>
+<string name="playback_tempo">Tempo</string>
+- </resources>
++ <string name="download_thumbnail_summary">Desabilite para para de carregar todas as miniaturas e economizar dados e uso de memória.Alterar esta configuração irá limpar o cache de imagens na memória e em disco.</string>
++ <string name="playback_pitch">Passo</string>
++ <string name="unhook_checkbox">Desenganchar</string>
++ <string name="playback_default">Padrão</string>
++ </resources>
+
+Language: java
+Generated Outputs:
+- SLM: Translated using Weblate(Portuguese)
+
+- ICL: Merge remote - tracking branch'dakrone/add - dir - locals.el'
+
+- PEFT: Translated using Weblate(Portuguese(Brazil))
+
+- NL: Translated using Weblate(Portuguese(Brazil))
+
+Translated,Weblate,Portuguese
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 318
+Diff:
+
+
+import java.util.Calendar;
+import java.util.Date;
++ import java.util.Random;
+import java.util.TimeZone;
+
+import junit.framework.TestCase;
+
+- import org.junit.Assert;
+-
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.parser.JSONToken;
+import com.alibaba.fastjson.serializer.CalendarCodec;
++ import com.alibaba.fastjson.serializer.SerializerFeature;
+
+
+public class DateParseTest9 extends TestCase{
++
++ private static Random random=new Random();
++ private TimeZone original=TimeZone.getDefault();
++ private String[]zoneIds=TimeZone.getAvailableIDs();
++
++ @Override
++ public void setUp(){
++ int index=random.nextInt(zoneIds.length);
++ TimeZone.setDefault(TimeZone.getTimeZone(zoneIds[index]));
++ }
++
++ @Override
++ public void tearDown(){
++ TimeZone.setDefault(original);
++ }
++
+public void test_date()throws Exception{
+String text="\"/Date(1242357713797+0800)/\"";
+Date date=JSON.parseObject(text,Date.class);
+- Assert.assertEquals(date.getTime(),1242357713797L);
++ assertEquals(date.getTime(),1242357713797L);
+
+- Assert.assertEquals(JSONToken.LITERAL_INT,CalendarCodec.instance.getFastMatchToken());
++ assertEquals(JSONToken.LITERAL_INT,CalendarCodec.instance.getFastMatchToken());
+
+text="\"/Date(1242357713797+0545)/\"";
+date=JSON.parseObject(text,Date.class);
+- Assert.assertEquals(date.getTime(),1242357713797L);
+- Assert.assertEquals(JSONToken.LITERAL_INT,CalendarCodec.instance.getFastMatchToken());
++ assertEquals(date.getTime(),1242357713797L);
++ assertEquals(JSONToken.LITERAL_INT,CalendarCodec.instance.getFastMatchToken());
+}
+
+public void test_error()throws Exception{
+public void test_error()throws Exception{
+}catch(Exception ex){
+error=ex;
+}
+- Assert.assertNotNull(error);
++ assertNotNull(error);
+}
+
+public void test_error_1()throws Exception{
+public void test_error_1()throws Exception{
+}catch(Exception ex){
+error=ex;
+}
+- Assert.assertNotNull(error);
++ assertNotNull(error);
+}
+
+public void test_dates_different_timeZones(){
+- Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("IST"));
++ Calendar cal=Calendar.getInstance();
+Date now=cal.getTime();
+
+VO vo=new VO();
+public void test_dates_different_timeZones(){
+String json=JSON.toJSONString(vo);
+VO result=JSON.parseObject(json,VO.class);
+assertEquals(vo.date,result.date);
++
++ //with iso-format
++ json=JSON.toJSONString(vo,SerializerFeature.UseISO8601DateFormat);
++ result=JSON.parseObject(json,VO.class);
++ assertEquals(vo.date,result.date);
+}
+
+public static class VO{
+
+Language: java
+Generated Outputs:
+- SLM: Merge pull request from kiddingYang/master
+
+- ICL: Adds a test to check that the time zone is correctly parsed when the time zone is not UTC.
+
+- PEFT: DateParseTest9 fix
+
+- NL: feat(test):add support to run tests with different timeZones
+
+add, test, timezones
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1678
+Diff:
+
+<parent>
+<groupId>io.zipkin</groupId>
+<artifactId>zipkin-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>benchmarks</artifactId>
+
+
+<groupId>io.zipkin</groupId>
+<artifactId>zipkin-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+<packaging>pom</packaging>
+
+<modules>
+
+<url>https://github.com/openzipkin/zipkin</url>
+<connection>scm:git:https://github.com/openzipkin/zipkin.git</connection>
+<developerConnection>scm:git:https://github.com/openzipkin/zipkin.git</developerConnection>
+- <tag>HEAD</tag>
++ <tag>2.22.0</tag>
+</scm>
+
+<!--Developer section is needed for Maven Central,but doesn't need to include each person-->
+
+<parent>
+<groupId>io.zipkin.zipkin2</groupId>
+<artifactId>zipkin-collector-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>zipkin-collector-activemq</artifactId>
+
+<parent>
+<groupId>io.zipkin.zipkin2</groupId>
+<artifactId>zipkin-collector-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>zipkin-collector</artifactId>
+
+<parent>
+<groupId>io.zipkin.zipkin2</groupId>
+<artifactId>zipkin-collector-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>zipkin-collector-kafka</artifactId>
+
+<parent>
+<groupId>io.zipkin</groupId>
+<artifactId>zipkin-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<groupId>io.zipkin.zipkin2</groupId>
+
+<parent>
+<groupId>io.zipkin.zipkin2</groupId>
+<artifactId>zipkin-collector-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>zipkin-collector-rabbitmq</artifactId>
+
+<parent>
+<groupId>io.zipkin.zipkin2</groupId>
+<artifactId>zipkin-collector-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>zipkin-collector-scribe</artifactId>
+
+<parent>
+<groupId>io.zipkin</groupId>
+<artifactId>zipkin-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<groupId>io.zipkin.zipkin2</groupId>
+
+<parent>
+<groupId>io.zipkin</groupId>
+<artifactId>zipkin-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>zipkin-lens</artifactId>
+
+<parent>
+<groupId>io.zipkin</groupId>
+<artifactId>zipkin-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>zipkin-server</artifactId>
+
+the License.
+
+- ->
+- <project xmlns="http://maven.apache.org/POM/4.0.0"
+- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+- xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
++ <project xmlns="http://maven.apache.org/POM/4.0.0"xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<modelVersion>4.0.0</modelVersion>
+
+<parent>
+<groupId>io.zipkin.zipkin2</groupId>
+<artifactId>zipkin-storage-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>zipkin-storage-cassandra-v1</artifactId>
+
+the License.
+
+- ->
+- <project xmlns="http://maven.apache.org/POM/4.0.0"
+- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+- xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
++ <project xmlns="http://maven.apache.org/POM/4.0.0"xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<modelVersion>4.0.0</modelVersion>
+
+<parent>
+<groupId>io.zipkin.zipkin2</groupId>
+<artifactId>zipkin-storage-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>zipkin-storage-cassandra</artifactId>
+
+<parent>
+<groupId>io.zipkin.zipkin2</groupId>
+<artifactId>zipkin-storage-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>zipkin-storage-elasticsearch</artifactId>
+
+<parent>
+<groupId>io.zipkin.zipkin2</groupId>
+<artifactId>zipkin-storage-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<artifactId>zipkin-storage-mysql-v1</artifactId>
+
+<parent>
+<groupId>io.zipkin</groupId>
+<artifactId>zipkin-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<groupId>io.zipkin.zipkin2</groupId>
+
+<parent>
+<groupId>io.zipkin</groupId>
+<artifactId>zipkin-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<groupId>io.zipkin.zipkin2</groupId>
+
+the License.
+
+- ->
+- <project xmlns="http://maven.apache.org/POM/4.0.0"
+- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+- xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
++ <project xmlns="http://maven.apache.org/POM/4.0.0"xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<modelVersion>4.0.0</modelVersion>
+
+<parent>
+<groupId>io.zipkin</groupId>
+<artifactId>zipkin-parent</artifactId>
+- <version>2.21.8-SNAPSHOT</version>
++ <version>2.22.0</version>
+</parent>
+
+<groupId>io.zipkin.zipkin2</groupId>
+
+</relocation>
+</relocations>
+<transformers>
+- <transformer
+- implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
++ <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+<manifestEntries>
+<Automatic-Module-Name>${module.name}</Automatic-Module-Name>
+</manifestEntries>
+
+Language: java
+Generated Outputs:
+- SLM: [maven - release - plugin]prepare release 2.22.0
+
+- ICL: Merge remote-tracking branch 'origin/master' into master
+
+- PEFT: [maven - release - plugin]prepare for next development iteration()
+
+- NL: [maven - release - plugin]prepare release 2.22.0
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1844
+Diff:
+
+import org.reactivestreams.*;
+
+import io.reactivex.Observable.Operator;
++ import io.reactivex.internal.subscribers.ConditionalSubscriber;
+import io.reactivex.plugins.RxJavaPlugins;
+
+/* *
+public OperatorFilter(Predicate<?super T>predicate){
+return new FilterSubscriber<>(s,predicate);
+}
+
+- static final class FilterSubscriber<T>implements Subscriber<T>{
++ static final class FilterSubscriber<T>implements ConditionalSubscriber<T>{
+final Predicate<?super T>filter;
+final Subscriber<?super T>actual;
+Subscription subscription;
+public void onSubscribe(Subscription s){
+}
+@Override
+public void onNext(T t){
++ if(!onNextIf(t)){
++ subscription.request(1);
++ }
++ }
++
++ @Override
++ public boolean onNextIf(T t){
+boolean b;
+try{
+b=filter.test(t);
+}catch(Throwable e){
+subscription.cancel();
+actual.onError(e);
+- return;
++ return true;
+}
+if(b){
+actual.onNext(t);
+- }else{
+- subscription.request(1);
+}
++ return b;
+}
++
+@Override
+public void onError(Throwable t){
+actual.onError(t);
+
+
+import org.reactivestreams.*;
+
++ import io.reactivex.internal.subscribers.ConditionalSubscriber;
+import io.reactivex.internal.util.BackpressureHelper;
+import io.reactivex.plugins.RxJavaPlugins;
+
+public PublisherArraySource(T[]array){
+}
+@Override
+public void subscribe(Subscriber<?super T>s){
+- s.onSubscribe(new ArraySourceSubscription<>(array,s));
++ if(s instanceof ConditionalSubscriber){
++ ConditionalSubscriber<?super T>cs=(ConditionalSubscriber<?super T>)s;
++ s.onSubscribe(new ConditionalArraySourceSubscription<>(array,cs));
++ }else{
++ s.onSubscribe(new ArraySourceSubscription<>(array,s));
++ }
+}
++
+static final class ArraySourceSubscription<T>extends AtomicLong implements Subscription{
+/* * */
+private static final long serialVersionUID=-225561973532207332L;
+public ArraySourceSubscription(T[]array,Subscriber<?super T>subscriber){
+this.array=array;
+this.subscriber=subscriber;
+}
++
+@Override
+public void request(long n){
+if(n<=0){
+public void cancel(){
+cancelled=true;
+}
+}
++
++ static final class ConditionalArraySourceSubscription<T>extends AtomicLong implements Subscription{
++ /* * */
++ private static final long serialVersionUID=-225561973532207332L;
++
++ final T[]array;
++ final ConditionalSubscriber<?super T>subscriber;
++
++ int index;
++ volatile boolean cancelled;
++
++ public ConditionalArraySourceSubscription(T[]array,ConditionalSubscriber<?super T>subscriber){
++ this.array=array;
++ this.subscriber=subscriber;
++ }
++
++ @Override
++ public void request(long n){
++ if(n<=0){
++ RxJavaPlugins.onError(new IllegalArgumentException("n>0 required but it was"+n));
++ return;
++ }
++ if(BackpressureHelper.add(this,n)==0L){
++ long r=n;
++ final ConditionalSubscriber<?super T>s=subscriber;
++ for(;;){
++ int i=index;
++ T[]a=array;
++ int len=a.length;
++ if(i+r>=len){
++ if(cancelled){
++ return;
++ }
++ for(int j=i;j<len;j++){
++ s.onNext(a[j]);
++ if(cancelled){
++ return;
++ }
++ }
++ s.onComplete();
++ return;
++ }
++ long e=0;
++ if(cancelled){
++ return;
++ }
++ while(r!=0&&i<len){
++ boolean b=s.onNextIf(a[i]);
++ if(cancelled){
++ return;
++ }
++ if(++i==len){
++ s.onComplete();
++ return;
++ }
++ if(b){
++ r--;
++ e--;
++ }
++ }
++ index=i;
++ r=addAndGet(e);
++ if(r==0L){
++ return;
++ }
++ }
++ }
++ }
++ @Override
++ public void cancel(){
++ cancelled=true;
++ }
++ }
+}
+new file mode 100644
+index 0000000000..694637338c
+mmm/dev/null
+
++ /* *
++ * Copyright 2015 Netflix,Inc.
++ *
++ * Licensed under the Apache License,Version 2.0(the"License");you may not use this file except in
++ * compliance with the License.You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing,software distributed under the License is
++ * distributed on an"AS IS"BASIS,WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,either express or implied.See
++ * the License for the specific language governing permissions and limitations under the License.
++ */
++
++ package io.reactivex.internal.subscribers;
++
++ import org.reactivestreams.Subscriber;
++
++ /* *
++ * An Subscriber with an additional onNextIf(T)method that
++ * tells the caller the specified value has been accepted or
++ * not.
++ *
++ *<p>This allows certain queue-drain or source-drain operators
++ * to avoid requesting 1 on behalf of a dropped value.
++ *
++ *@param<T>the value type
++ */
++ public interface ConditionalSubscriber<T>extends Subscriber<T>{
++ @Override
++ default void onNext(T t){
++ onNextIf(t);
++ }
++
++ /* *
++ * Conditionally takes the value.
++ *@param t the value to deliver
++ *@return true if the value has been accepted,false if the value has been rejected
++ */
++ boolean onNextIf(T t);
++ }
+
+Language: java
+Generated Outputs:
+- SLM: 2.x:Fix issue when OperatorFilter.onNext()is used with Conditional
+
+- ICL: :
+
+- PEFT: [Operators]Fix Filter operator to not request more than one item when the predicate returns false()
+
+- NL: Merge pull request from akarnokd/ConditionalSubscriber2x
+
+fix, api, License 
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 1
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 897
+Diff:
+
+package hudson.init.impl;
+
+import hudson.init.Initializer;
++ import java.io.EOFException;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.WebApp;
+import org.kohsuke.stapler.compression.CompressionFilter;
+
+import org.kohsuke.stapler.Stapler;
+
+/* *
+- *@author Kohsuke Kawaguchi
++ * Deals with exceptions that get thrown all the way up to the Stapler rendering layer.
+*/
+public class InstallUncaughtExceptionHandler{
+
+
+
+@Initializer
+public static void init(final Jenkins j)throws IOException{
+- CompressionFilter.setUncaughtExceptionHandler(j.servletContext,new UncaughtExceptionHandler(){
+- @Override
+- public void reportException(Throwable e,ServletContext context,HttpServletRequest req,HttpServletResponse rsp)throws ServletException,IOException{
++ CompressionFilter.setUncaughtExceptionHandler(j.servletContext,(e,context,req,rsp)->{
+if(rsp.isCommitted()){
+- LOGGER.log(Level.WARNING,null,e);
++ LOGGER.log(isEOFException(e)?Level.FINE:Level.WARNING,null,e);
+return;
+}
+req.setAttribute("javax.servlet.error.exception",e);
+try{
+- WebApp.get(j.servletContext).getSomeStapler()
+- .invoke(req,rsp,Jenkins.getInstance(),"/oops");
++ WebApp.get(j.servletContext).getSomeStapler().invoke(req,rsp,Jenkins.get(),"/oops");
+}catch(ServletException|IOException x){
+if(!Stapler.isSocketException(x)){
+throw x;
+}
+}
+- }
+});
+try{
+Thread.setDefaultUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler());
+public void reportException(Throwable e,ServletContext context,HttpServletRequ
+}
+}
+
++ private static boolean isEOFException(Throwable e){
++ if(e==null){
++ return false;
++ }else if(e instanceof EOFException){
++ return true;
++ }else{
++ return isEOFException(e.getCause());
++ }
++ }
++
+/* * An UncaughtExceptionHandler that just logs the exception */
+private static class DefaultUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler{
+
+
+Language: java
+Generated Outputs:
+- SLM: Merge pull request from kohsuke/master
+
+- ICL: Adds a new UncaughtExceptionHandler to the CompressionFilter that handles exceptions that get thrown all the way up to the Stapler rendering layer.
+
+- PEFT: [JENKINS - 41797]Log EOFExceptions as fine
+
+- NL: Merge pull request from jglick/UncaughtExceptionHandler - EOFException
+
+EOFException， CompressionFilter ， refine
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 4
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 299
+Diff:
+string BlazeStartupOptions::GetJvm(){
+}
+exit(1);
+}
+- for(string rt_jar:{
+- //If the full JDK is installed
+- GetHostJavabase()+"/jre/lib/rt.jar",
+- //If just the JRE is installed
+- GetHostJavabase()+"/lib/rt.jar"
+- }){
+- if(access(rt_jar.c_str(),R_OK)==0){
+- return java_program;
+- }
++ //If the full JDK is installed
++ string jdk_rt_jar=GetHostJavabase()+"/jre/lib/rt.jar";
++ //If just the JRE is installed
++ string jre_rt_jar=GetHostJavabase()+"/lib/rt.jar";
++ if((access(jdk_rt_jar.c_str(),R_OK)==0)
++ ||(access(jre_rt_jar.c_str(),R_OK)==0)){
++ return java_program;
+}
+fprintf(stderr,"Problem with java installation:"
+"couldn't find/access rt.jar in%s\n",GetHostJavabase().c_str());
+
+Language: java
+Generated Outputs:
+- SLM: DanielWagnerHall:Simplify the code
+
+- ICL: Adds a check for the existence of the rt.jar file in the JDK or JRE installation.
+
+- PEFT: Fix a bug in GetJvm()
+
+- NL: Fix the compilation of blaze_startup_options.cc on old Ubuntu systems.
+
+fix/simplify, jdk/jre，rt.jar
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 426
+Diff:
+
+<modelVersion>4.0.0</modelVersion>
+<groupId>org.elasticsearch</groupId>
+<artifactId>elasticsearch-analysis-smartcn</artifactId>
+- <version>1.0.0-SNAPSHOT</version>
++ <version>1.0.0</version>
+<packaging>jar</packaging>
+<description>Smart Chinese Analysis for ElasticSearch</description>
+<inceptionYear>2009</inceptionYear>
+
+Language: java
+Generated Outputs:
+- SLM: move to 1.0.0
+
+- ICL: MINOR:Fix state transition diagram for stream threads()
+
+- PEFT: [maven - release - plugin]prepare release elasticsearch - analysis - smartcn 1.0.0
+
+- NL: release 1.0.0
+
+release, 1.0.0
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 2
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 696
+Diff:
+deleted file mode 100644
+index 996f5281725..00000000000
+ppp/dev/null
+
+- package com.baeldung.hikaricp;
+-
+- import java.io.PrintWriter;
+- import java.sql.Connection;
+- import java.sql.SQLException;
+- import java.util.Properties;
+-
+- import com.zaxxer.hikari.HikariConfig;
+- import com.zaxxer.hikari.HikariDataSource;
+-
+- public class DataSource{
+-
+- private static HikariConfig config=new HikariConfig();
+- private static HikariDataSource ds;
+-
+- static{
+- //config=new HikariConfig("datasource.properties");
+-
+- //Properties props=new Properties();
+- //props.setProperty("dataSourceClassName","org.postgresql.ds.PGSimpleDataSource");
+- //props.setProperty("dataSource.user","postgres");
+- //props.setProperty("dataSource.password","postgres");
+- //props.setProperty("dataSource.databaseName","postgres");
+- //props.setProperty("dataSource.portNumber","5432");
+- //props.setProperty("dataSource.serverName","localhost");
+- //props.put("dataSource.logWriter",new PrintWriter(System.out));
+- //config=new HikariConfig(props);
+-
+- config.setJdbcUrl("jdbc:postgresql://localhost:5432/postgres");
+- config.setUsername("postgres");
+- config.setPassword("postgres");
+- config.addDataSourceProperty("cachePrepStmts","true");
+- config.addDataSourceProperty("prepStmtCacheSize","250");
+- config.addDataSourceProperty("prepStmtCacheSqlLimit","2048");
+- ds=new HikariDataSource(config);
+-
+- //ds.setJdbcUrl("jdbc:postgresql://localhost:5432/postgres");
+- //ds.setUsername("postgres");
+- //ds.setPassword("postgres");
+- }
+-
+- private DataSource(){}
+-
+- public static Connection getConnection()throws SQLException{
+- return ds.getConnection();
+- }
+-
+- }
+deleted file mode 100644
+index 5472d5c18ce..00000000000
+ppp/dev/null
+
+- package com.baeldung.hikaricp;
+-
+- import java.sql.Date;
+-
+- public class Employee{
+-
+- private int empNo;
+- private String ename;
+- private String job;
+- private int mgr;
+- private Date hiredate;
+- private int sal;
+- private int comm;
+- private int deptno;
+-
+- public int getEmpNo(){
+- return empNo;
+- }
+- public void setEmpNo(int empNo){
+- this.empNo=empNo;
+- }
+- public String getEname(){
+- return ename;
+- }
+- public void setEname(String ename){
+- this.ename=ename;
+- }
+-
+- public String getJob(){
+- return job;
+- }
+- public void setJob(String job){
+- this.job=job;
+- }
+- public int getMgr(){
+- return mgr;
+- }
+- public void setMgr(int mgr){
+- this.mgr=mgr;
+- }
+- public Date getHiredate(){
+- return hiredate;
+- }
+- public void setHiredate(Date hiredate){
+- this.hiredate=hiredate;
+- }
+- public int getSal(){
+- return sal;
+- }
+- public void setSal(int sal){
+- this.sal=sal;
+- }
+- public int getComm(){
+- return comm;
+- }
+- public void setComm(int comm){
+- this.comm=comm;
+- }
+- public int getDeptno(){
+- return deptno;
+- }
+- public void setDeptno(int deptno){
+- this.deptno=deptno;
+- }
+-
+- @Override
+- public String toString(){
+- return"Employee[empNo="+empNo+",ename="+ename+",job="+job+",mgr="+mgr+",hiredate="
+- +hiredate+",sal="+sal+",comm="+comm+",deptno="+deptno+"]";
+- }
+-
+- }
+deleted file mode 100644
+index 97b5bf56443..00000000000
+ppp/dev/null
+
+- package com.baeldung.hikaricp;
+-
+- import java.sql.Connection;
+- import java.sql.PreparedStatement;
+- import java.sql.ResultSet;
+- import java.sql.SQLException;
+- import java.util.ArrayList;
+- import java.util.List;
+-
+- public class HikariCPDemo{
+-
+- public static List<Employee>fetchData(){
+- final String SQL_QUERY="select * from emp";
+- List<Employee>employees=null;
+- try(Connection con=DataSource.getConnection();
+- PreparedStatement pst=con.prepareStatement(SQL_QUERY);
+- ResultSet rs=pst.executeQuery();){
+- employees=new ArrayList<Employee>();
+- Employee employee;
+- while(rs.next()){
+- employee=new Employee();
+- employee.setEmpNo(rs.getInt("empno"));
+- employee.setEname(rs.getString("ename"));
+- employee.setJob(rs.getString("job"));
+- employee.setMgr(rs.getInt("mgr"));
+- employee.setHiredate(rs.getDate("hiredate"));
+- employee.setSal(rs.getInt("sal"));
+- employee.setComm(rs.getInt("comm"));
+- employee.setDeptno(rs.getInt("deptno"));
+- employees.add(employee);
+- }
+- }catch(SQLException e){
+- e.printStackTrace();
+- }
+- return employees;
+- }
+-
+- }
+deleted file mode 100644
+index 1dac59307bb..00000000000
+ppp/dev/null
+
+- create table dept(
+- deptno numeric,
+- dname varchar(14),
+- loc varchar(13),
+- constraint pk_dept primary key(deptno)
+- );
+-
+- create table emp(
+- empno numeric,
+- ename varchar(10),
+- job varchar(9),
+- mgr numeric,
+- hiredate date,
+- sal numeric,
+- comm numeric,
+- deptno numeric,
+- constraint pk_emp primary key(empno),
+- constraint fk_deptno foreign key(deptno)references dept(deptno)
+- );
+-
+- insert into dept values(10,'ACCOUNTING','NEW YORK');
+- insert into dept values(20,'RESEARCH','DALLAS');
+- insert into dept values(30,'SALES','CHICAGO');
+- insert into dept values(40,'OPERATIONS','BOSTON');
+-
+- insert into emp values(
+- 7839,'KING','PRESIDENT',null,
+- to_date('17-11-1981','dd-mm-yyyy'),
+- 7698,null,10
+- );
+- insert into emp values(
+- 7698,'BLAKE','MANAGER',7839,
+- to_date('1-5-1981','dd-mm-yyyy'),
+- 7782,null,20
+- );
+- insert into emp values(
+- 7782,'CLARK','MANAGER',7839,
+- to_date('9-6-1981','dd-mm-yyyy'),
+- 7566,null,30
+- );
+- insert into emp values(
+- 7566,'JONES','MANAGER',7839,
+- to_date('2-4-1981','dd-mm-yyyy'),
+- 7839,null,40
+- );
+-
+- commit;
+\No newline at end of file
+
+Language: java
+Generated Outputs:
+- SLM: Delete HikariDataSource.java
+
+- ICL: Added HikariCP benchmarks
+
+- PEFT: Merge pull request from baeldung/master
+
+- NL: Removed dead code
+
+remove, code
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1846
+Diff:
+
+package io.shardingsphere.example.jdbc.nodep.config;
+
+import com.google.common.collect.Lists;
+-
++ import io.shardingsphere.api.config.KeyGeneratorConfiguration;
+import io.shardingsphere.api.config.rule.MasterSlaveRuleConfiguration;
+import io.shardingsphere.api.config.rule.ShardingRuleConfiguration;
+import io.shardingsphere.api.config.rule.TableRuleConfiguration;
+private static TableRuleConfiguration getOrderTableRuleConfiguration(){
+TableRuleConfiguration result=new TableRuleConfiguration();
+result.setLogicTable("t_order");
+result.setActualDataNodes("ds_${0..1}.t_order_${[0,1]}");
+- result.setKeyGeneratorColumnName("order_id");
++ result.setKeyGeneratorConfig(getKeyGeneratorConfiguration());
+return result;
+}
+
+private static TableRuleConfiguration getOrderItemTableRuleConfiguration(){
+result.put("demo_ds_master_1_slave_1",DataSourceUtil.createDataSource("demo_ds_master_1_slave_1"));
+return result;
+}
++
++ private static KeyGeneratorConfiguration getKeyGeneratorConfiguration(){
++ KeyGeneratorConfiguration result=new KeyGeneratorConfiguration();
++ result.setColumn("order_id");
++ return result;
++ }
+}
+
+Language: java
+Generated Outputs:
+- SLM: modify order config key
+
+- ICL: Adds a key generator configuration to the order table rule configuration.
+
+- PEFT: add key generator configuration
+
+- NL: modify ShardingMasterSlaveConfigurationRange.java
+
+modify, order_id, getKeyGeneratorConfiguration
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1186
+Diff:
+private Value emitCompareAndSwap(boolean isLogic,LIRKind accessKind,Value addr
+
+if(isLogic){
+assert trueValue.getValueKind().equals(falseValue.getValueKind());
+- Variable result=newVariable(trueValue.getValueKind());
+- append(new CondMoveOp(result,Condition.EQ,asAllocatable(trueValue),falseValue));
+- return result;
++ return emitCondMoveOp(Condition.EQ,trueValue,falseValue,false,false);
+}else{
+if(isXmm){
+return arithmeticLIRGen.emitReinterpret(accessKind,aRes);
+public Variable emitConditionalMove(PlatformKind cmpKind,Value left,Value righ
+finalCondition=emitCompare(cmpKind,left,right,cond);
+}
+
+- boolean isParityCheckNecessary=isFloatComparison&&unorderedIsTrue!=AMD64ControlFlow.trueOnUnordered(finalCondition);
+- Variable result=newVariable(finalTrueValue.getValueKind());
+- if(!isParityCheckNecessary&&isIntConstant(finalTrueValue,1)&&isIntConstant(finalFalseValue,0)){
++ return emitCondMoveOp(finalCondition,finalTrueValue,finalFalseValue,isFloatComparison,unorderedIsTrue);
++ }
++
++ private Variable emitCondMoveOp(Condition condition,Value trueValue,Value falseValue,boolean isFloatComparison,boolean unorderedIsTrue){
++ boolean isParityCheckNecessary=isFloatComparison&&unorderedIsTrue!=AMD64ControlFlow.trueOnUnordered(condition);
++ Variable result=newVariable(trueValue.getValueKind());
++ if(!isParityCheckNecessary&&isIntConstant(trueValue,1)&&isIntConstant(falseValue,0)){
+if(isFloatComparison){
+- append(new FloatCondSetOp(result,finalCondition));
++ append(new FloatCondSetOp(result,condition));
+}else{
+- append(new CondSetOp(result,finalCondition));
++ append(new CondSetOp(result,condition));
+}
+- }else if(!isParityCheckNecessary&&isIntConstant(finalTrueValue,0)&&isIntConstant(finalFalseValue,1)){
++ }else if(!isParityCheckNecessary&&isIntConstant(trueValue,0)&&isIntConstant(falseValue,1)){
+if(isFloatComparison){
+- if(unorderedIsTrue==AMD64ControlFlow.trueOnUnordered(finalCondition.negate())){
+- append(new FloatCondSetOp(result,finalCondition.negate()));
++ if(unorderedIsTrue==AMD64ControlFlow.trueOnUnordered(condition.negate())){
++ append(new FloatCondSetOp(result,condition.negate()));
+}else{
+- append(new FloatCondSetOp(result,finalCondition));
++ append(new FloatCondSetOp(result,condition));
+Variable negatedResult=newVariable(result.getValueKind());
+append(new AMD64Binary.ConstOp(AMD64BinaryArithmetic.XOR,OperandSize.get(result.getPlatformKind()),negatedResult,result,1));
+result=negatedResult;
+}
+}else{
+- append(new CondSetOp(result,finalCondition.negate()));
++ append(new CondSetOp(result,condition.negate()));
+}
+}else if(isFloatComparison){
+- append(new FloatCondMoveOp(result,finalCondition,unorderedIsTrue,load(finalTrueValue),load(finalFalseValue)));
++ append(new FloatCondMoveOp(result,condition,unorderedIsTrue,load(trueValue),load(falseValue)));
+}else{
+- append(new CondMoveOp(result,finalCondition,load(finalTrueValue),loadNonConst(finalFalseValue)));
++ append(new CondMoveOp(result,condition,load(trueValue),loadNonConst(falseValue)));
+}
+return result;
+}
+public Variable emitConditionalMove(PlatformKind cmpKind,Value left,Value righ
+@Override
+public Variable emitIntegerTestMove(Value left,Value right,Value trueValue,Value falseValue){
+emitIntegerTest(left,right);
+- Variable result=newVariable(trueValue.getValueKind());
+- append(new CondMoveOp(result,Condition.EQ,load(trueValue),loadNonConst(falseValue)));
+- return result;
++ return emitCondMoveOp(Condition.EQ,load(trueValue),loadNonConst(falseValue),false,false);
+}
+
+protected static AVXSize getRegisterSize(Value a){
+
+Language: java
+Generated Outputs:
+- SLM: Merge remote - tracking branch'origin/devel'into devel
+
+- ICL: Adds a new method to emit conditional move operations.
+
+- PEFT: [GR - 11977]Merge pull request from - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+- NL: Use sete instead cmove with cmopxchg
+
+use, sete, cmove
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+----------------------------------------
+
+ID: 43
+Diff:
+public static void writeBuild(Build build,StreamOutput out)throws IOException
+out.writeString(build.hashShort());
+out.writeString(build.timestamp());
+}
++
++ @Override
++ public String toString(){
++ return"["+hash+"]["+timestamp+"]";
++ }
+}
+
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+- import static junit.framework.Assert.assertFalse;
+import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
+
+/* *
+synchronized void startInternal(Client client,Settings settings,String nodeNam
+builder.inheritIO();
+boolean success=false;
+try{
+- logger.debug("starting external node[{}]with:{}",nodeName,builder.command());
++ logger.info("starting external node[{}]with:{}",nodeName,builder.command());
+process=builder.start();
+this.nodeInfo=null;
+if(waitForNode(client,nodeName)){
+nodeInfo=nodeInfo(client,nodeName);
+assert nodeInfo!=null;
++ logger.info("external node{}found,version[{}],build{}",nodeInfo.getNode(),nodeInfo.getVersion(),nodeInfo.getBuild());
+}else{
+throw new IllegalStateException("Node["+nodeName+"]didn't join the cluster");
+}
+
+Language: java
+Generated Outputs:
+- SLM: Improve external node logging to include version information.
+
+- ICL: Adds logging to the start method to show the command that is being executed.
+
+- PEFT: [TEST]Log external node start
+
+- NL: Tests:improve logging of external node version and build
+
+improve, log, node, version
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 2
+  Conciseness: 4
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1532
+Diff:
+public DBAServerSession getSelectedSession()
+}
+}
+
++ public List<DBAServerSession>getSelectedSessions()
++ {
++ ISelection selection=sessionTable.getSelectionProvider().getSelection();
++ if(selection instanceof IStructuredSelection&&!selection.isEmpty()){
++ List<DBAServerSession>sessions=new ArrayList<>();
++ for(Object item:((IStructuredSelection)selection).toArray()){
++ if(item instanceof DBAServerSession){
++ sessions.add((DBAServerSession)item);
++ }
++ }
++ return sessions;
++ }else{
++ return Collections.emptyList();
++ }
++ }
++
+public void refreshSessions()
+{
+sessionTable.loadData();
+public void refreshSessions()
+refreshControl.scheduleAutoRefresh(false);
+}
+
+- public void alterSession(final SESSION_TYPE session,Map<String,Object>options){
+- sessionTable.createAlterService(session,options).schedule();
++ public void alterSessions(final List<SESSION_TYPE>sessions,Map<String,Object>options){
++ sessionTable.createAlterService(sessions,options).schedule();
+}
+
+private void updateSQL(){
+
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IWorkbenchSite;
+import org.jkiss.code.NotNull;
++ import org.jkiss.dbeaver.Log;
+import org.jkiss.dbeaver.model.admin.sessions.DBAServerSession;
+import org.jkiss.dbeaver.model.admin.sessions.DBAServerSessionManager;
+import org.jkiss.dbeaver.model.exec.DBCExecutionContext;
+
+*/
+class SessionTable<SESSION_TYPE extends DBAServerSession>extends DatabaseObjectListControl<SESSION_TYPE>{
+
++ private static final Log log=Log.getLog(SessionTable.class);
++
+private DBAServerSessionManager<SESSION_TYPE>sessionManager;
+
+SessionTable(Composite parent,int style,IWorkbenchSite site,DBAServerSessionManager<SESSION_TYPE>sessionManager)
+protected String getListConfigId(List<Class<?>>classList){
+new ObjectsLoadVisualizer());
+}
+
+- LoadingJob<Void>createAlterService(SESSION_TYPE session,Map<String,Object>options)
++ LoadingJob<Void>createAlterService(List<SESSION_TYPE>sessions,Map<String,Object>options)
+{
+return LoadingJob.createService(
+- new KillSessionService(session,options),
++ new KillSessionsService(sessions,options),
+new ObjectActionVisualizer());
+}
+
+public void inputChanged(Viewer viewer,Object oldInput,Object newInput)
+}
+}
+
+- private class KillSessionService extends DatabaseLoadService<Void>{
+- private final SESSION_TYPE session;
++ private class KillSessionsService extends DatabaseLoadService<Void>{
++ private final List<SESSION_TYPE>sessions;
+private final Map<String,Object>options;
+
+- KillSessionService(SESSION_TYPE session,Map<String,Object>options)
++ KillSessionsService(List<SESSION_TYPE>sessions,Map<String,Object>options)
+{
+super("Kill session",sessionManager.getDataSource());
+- this.session=session;
++ this.sessions=sessions;
+this.options=options;
+}
+
+public Void evaluate(DBRProgressMonitor monitor)
+try{
+try(DBCExecutionContext isolatedContext=sessionManager.getDataSource().getDefaultInstance().openIsolatedContext(monitor,"View sessions")){
+try(DBCSession session=isolatedContext.openSession(monitor,DBCExecutionPurpose.UTIL,"Kill server session")){
+- sessionManager.alterSession(session,this.session,options);
++ Throwable lastError=null;
++ for(SESSION_TYPE dbaSession:this.sessions){
++ try{
++ sessionManager.alterSession(session,dbaSession,options);
++ }catch(Exception e){
++ log.error("Error killing session"+session,e);
++ lastError=e;
++ }
++ }
++ if(lastError!=null){
++ throw new InvocationTargetException(lastError);
++ }
+return null;
+}
+}
+
+import org.jkiss.dbeaver.ui.views.session.SessionManagerViewer;
+
+import java.util.HashMap;
++ import java.util.List;
+import java.util.Map;
+
+/* *
+public ForceApplicationAction()
+@Override
+public void run()
+{
+- final DBAServerSession session=getSessionsViewer().getSelectedSession();
++ final List<DBAServerSession>sessions=getSessionsViewer().getSelectedSessions();
+final String action=DB2Messages.editors_db2_application_editor_action_force;
+if(UIUtils.confirmAction(getSite().getShell(),"Confirm force application",
+- NLS.bind(DB2Messages.editors_db2_application_editor_confirm_action,action.toLowerCase(),session))){
++ NLS.bind(DB2Messages.editors_db2_application_editor_confirm_action,action.toLowerCase(),sessions))){
+Map<String,Object>options=new HashMap<>();
+- getSessionsViewer().alterSession(session,options);
++ getSessionsViewer().alterSessions(sessions,options);
+}
+}
+}
+
+import org.jkiss.utils.CommonUtils;
+
+import java.util.Collections;
++ import java.util.List;
+
+/* *
+*@author Karl
+public KillSessionAction(boolean killQuery){
+
+@Override
+public void run(){
+- final DBAServerSession session=getSessionsViewer().getSelectedSession();
++ final List<DBAServerSession>sessions=getSessionsViewer().getSelectedSessions();
+final String action=ExasolMessages.editors_exasol_session_editor_action_kill;
+if(UIUtils.confirmAction(getSite().getShell(),"Confirm kill session",
+- NLS.bind(ExasolMessages.editors_exasol_session_editor_confirm_action,action.toLowerCase(),session))){
+- getSessionsViewer().alterSession(getSessionsViewer().getSelectedSession(),Collections.singletonMap(ExasolServerSessionManager.PROP_KILL_QUERY,(Object)killQuery));
++ NLS.bind(ExasolMessages.editors_exasol_session_editor_confirm_action,action.toLowerCase(),sessions))){
++ getSessionsViewer().alterSessions(sessions,Collections.singletonMap(ExasolServerSessionManager.PROP_KILL_QUERY,killQuery));
+}
+}
+}
+
+import org.jkiss.utils.CommonUtils;
+
+import java.util.Collections;
++ import java.util.List;
+import java.util.Map;
+
+/* *
+public KillSessionAction(boolean killQuery)
+@Override
+public void run()
+{
+- final DBAServerSession session=getSessionsViewer().getSelectedSession();
+- if(session!=null&&UIUtils.confirmAction(getSite().getShell(),
++ final List<DBAServerSession>sessions=getSessionsViewer().getSelectedSessions();
++ if(sessions!=null&&UIUtils.confirmAction(getSite().getShell(),
+this.getText(),
+- NLS.bind(MySQLMessages.editors_session_editor_confirm,getText(),session)))
++ NLS.bind(MySQLMessages.editors_session_editor_confirm,getText(),sessions)))
+{
+- getSessionsViewer().alterSession(
+- getSessionsViewer().getSelectedSession(),
+- Collections.singletonMap(MySQLSessionManager.PROP_KILL_QUERY,(Object)killQuery));
++ getSessionsViewer().alterSessions(
++ sessions,
++ Collections.singletonMap(MySQLSessionManager.PROP_KILL_QUERY,killQuery));
+}
+}
+}
+
+import org.jkiss.dbeaver.ui.views.session.SessionManagerViewer;
+import org.jkiss.utils.CommonUtils;
+
+- import java.util.Collections;
+import java.util.HashMap;
++ import java.util.List;
+import java.util.Map;
+
+/* *
+protected void saveSettings(IDialogSettings settings){
+@Override
+public void run()
+{
+- final DBAServerSession session=getSessionsViewer().getSelectedSession();
++ final List<DBAServerSession>sessions=getSessionsViewer().getSelectedSessions();
+final String action=(kill?OracleMessages.editors_oracle_session_editor_action_kill:OracleMessages.editors_oracle_session_editor_action_disconnect)+OracleMessages.editors_oracle_session_editor_action__session;
+ConfirmationDialog dialog=new ConfirmationDialog(
+getSite().getShell(),
+action,
+null,
+- NLS.bind(OracleMessages.editors_oracle_session_editor_confirm_action,action.toLowerCase(),session),
++ NLS.bind(OracleMessages.editors_oracle_session_editor_confirm_action,action.toLowerCase(),sessions),
+MessageDialog.CONFIRM,
+new String[]{IDialogConstants.YES_LABEL,IDialogConstants.NO_LABEL},
+0,
+public void run()
+if(dialog.getToggleState()){
+options.put(OracleServerSessionManager.PROP_IMMEDIATE,true);
+}
+- getSessionsViewer().alterSession(session,options);
++ getSessionsViewer().alterSessions(sessions,options);
+}
+}
+}
+
+import org.jkiss.dbeaver.ui.views.session.SessionManagerViewer;
+import org.jkiss.utils.CommonUtils;
+
++ import java.util.List;
++
+/* *
+* PostgreSessionEditor
+*/
+protected void contributeToToolbar(DBAServerSessionManager sessionManager,ICont
+protected void onSessionSelect(DBAServerSession session)
+{
+super.onSessionSelect(session);
+- terminateQueryAction.setEnabled(session!=null&&!CommonUtils.isEmpty(session.getActiveQuery()));
++ terminateQueryAction.setEnabled(session!=null);
+}
+};
+}
+protected void onSessionSelect(DBAServerSession session)
+@Override
+public void run()
+{
+- final DBAServerSession session=getSessionsViewer().getSelectedSession();
+- if(session!=null&&UIUtils.confirmAction(getSite().getShell(),
++ final List<DBAServerSession>sessions=getSessionsViewer().getSelectedSessions();
++ if(sessions!=null&&UIUtils.confirmAction(
++ getSite().getShell(),
+this.getText(),
+- NLS.bind("Teminate session?",getText(),session)))
++ NLS.bind("Terminate session{0}?",sessions)))
+{
+- getSessionsViewer().alterSession(
+- getSessionsViewer().getSelectedSession(),
++ getSessionsViewer().alterSessions(
++ sessions,
+null);
+}
+}
+public String getActiveQuery()
+@Override
+public String toString()
+{
+- return pid+"@"+db;
++ if(!CommonUtils.isEmpty(db)){
++ return pid+"@"+db;
++ }else{
++ return String.valueOf(pid);
++ }
+}
+}
+
+Language: java
+Generated Outputs:
+- SLM: SQL editor - alter session list fix
+
+- ICL: Adds a new method to SessionTable to get the selected sessions.
+
+- PEFT: Fix session table selection
+
+- NL: Session terminate - support multiple sessions terminate
+
+ support, multiple session
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 2
+  Conciseness: 3
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 399
+Diff:
+similarity index 98%
+rename from spring-context-support/src/test/java/org/springframework/cache/jcache/JCacheEhCacheTests.java
+rename to spring-context-support/src/test/java/org/springframework/cache/jcache/JCacheEhCacheAnnotationTests.java
+
+/* *
+*@author Stephane Nicoll
+*/
+- public class JCacheEhCacheTests extends AbstractAnnotationTests{
++ public class JCacheEhCacheAnnotationTests extends AbstractAnnotationTests{
+
+private CacheManager jCacheManager;
+
+similarity index 90%
+rename from spring-test/src/test/java/org/springframework/cache/jcache/JCacheEhCache3Tests.java
+rename to spring-test/src/test/java/org/springframework/cache/jcache/JCacheEhCache3AnnotationTests.java
+
+import javax.cache.spi.CachingProvider;
+
+/* *
+- * Just here to be run against EHCache 3,whereas the original JCacheEhCacheTests
++ * Just here to be run against EHCache 3,whereas the original JCacheEhCacheAnnotationTests
+* runs against EhCache 2.x with the EhCache-JCache add-on.
+*
+*@author Juergen Hoeller
+*@since 4.2.1
+*/
+- public class JCacheEhCache3Tests extends JCacheEhCacheTests{
++ public class JCacheEhCache3AnnotationTests extends JCacheEhCacheAnnotationTests{
+
+@Override
+protected CachingProvider getCachingProvider(){
+
+Language: java
+Generated Outputs:
+- SLM: Rename JCacheEhCacheTests to JCacheEhCacheAnnotationTests
+
+- ICL: Adding the rest of the client - hints headers(besides Arch which I don't think we need).
+
+- PEFT: Rename JCacheEhCacheTests to JCacheEhCacheAnnotationTests
+
+- NL: Fix test name
+
+Fix，name, XX函数
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1433
+Diff:
+class RxScalaDemo extends JUnitSuite{
+
+@Test def elementAtExample():Unit={
+val o=List("red","green","blue").toObservable
+- println(o(2).toBlockingObservable.single)
++ println(o.elementAt(2).toBlockingObservable.single)
+}
+
+@Test def elementAtOrDefaultExample():Unit={
+trait Observable[+T]
+*@throws IndexOutOfBoundsException
+* if index is less than 0
+*@see ` Observable.elementAt `
++ *@deprecated("Use ` elementAt `","0.18.0")
+*/
+def apply(index:Int):Observable[T]=elementAt(index)
+
+
+Language: java
+Generated Outputs:
+- SLM: Update RxScalaDemo.java
+
+- ICL: [DOCS]Fix deprecated elementAt()
+
+- PEFT: [RxScala]Update deprecated apply()
+
+- NL: Deprecate Observable.apply
+
+add, Deprecate, elementAt
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 556
+Diff:
+
+
+package org.apache.shardingsphere.core.metadata;
+
++ import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.shardingsphere.core.rule.DataNode;
+
+
+import javax.sql.DataSource;
+import java.sql.SQLException;
+- import java.util.Collections;
+import java.util.HashMap;
+- import java.util.List;
+import java.util.Map;
++ import java.util.List;
++ import java.util.Collection;
++ import java.util.LinkedList;
++ import java.util.Collections;
+import java.util.Map.Entry;
+import java.util.Optional;
+
+
+@RequiredArgsConstructor
+@Slf4j(topic="ShardingSphere-metadata")
+public final class ShardingMetaDataLoader{
+-
++
++ private static final String LINE_SEPARATOR=System.getProperty("line.separator");
++
+private final Map<String,DataSource>dataSourceMap;
+
+private final ShardingRule shardingRule;
+private SchemaMetaData loadDefaultSchemaMetaData()throws SQLException{
+return actualDefaultDataSourceName.isPresent()
+?SchemaMetaDataLoader.load(dataSourceMap.get(actualDefaultDataSourceName.get()),maxConnectionsSizePerQuery):new SchemaMetaData(Collections.emptyMap());
+}
+-
+- //TODO check all meta data in once
++
+private void checkUniformed(final String logicTableName,final Map<String,TableMetaData>actualTableMetaDataMap){
+ShardingTableMetaDataDecorator decorator=new ShardingTableMetaDataDecorator();
+TableMetaData sample=decorator.decorate(actualTableMetaDataMap.values().iterator().next(),logicTableName,shardingRule);
++ Collection<TableMetaDataViolation>violations=new LinkedList<>();
+for(Entry<String,TableMetaData>entry:actualTableMetaDataMap.entrySet()){
+if(!sample.equals(decorator.decorate(entry.getValue(),logicTableName,shardingRule))){
+- throw new ShardingSphereException(
+- "Cannot get uniformed table structure for logic table `%s ` and actual table `%s `.The different meta data of actual tables are as follows:\n%s\n%s.",
+- logicTableName,entry.getKey(),sample,entry.getValue());
++ violations.add(new TableMetaDataViolation(entry.getKey(),entry.getValue()));
+}
+}
++ throwExceptionIfNecessary(violations,logicTableName);
++ }
++
++ private void throwExceptionIfNecessary(final Collection<TableMetaDataViolation>violations,final String logicTableName){
++ if(!violations.isEmpty()){
++ StringBuilder errorMessage=new StringBuilder(
++ "Cannot get uniformed table structure for logic table `%s `,it has different meta data of actual tables are as follows:").append(LINE_SEPARATOR);
++ for(TableMetaDataViolation each:violations){
++ errorMessage.append("actual table:").append(each.getActualTableName()).append(",meta data:").append(each.getTableMetaData()).append(LINE_SEPARATOR);
++ }
++ throw new ShardingSphereException(errorMessage.toString(),logicTableName);
++ }
++ }
++
++ @RequiredArgsConstructor
++ @Getter
++ private final class TableMetaDataViolation{
++
++ private final String actualTableName;
++
++ private final TableMetaData tableMetaData;
+}
+}
+
+Language: java
+Generated Outputs:
+- SLM: for, add line separator to ShardingMetaDataLoader
+
+- ICL: [Docs]Add painless context details for bucket_script()
+
+- PEFT: add checkUniformed method to check all meta data in once
+
+- NL: issue - 4785:Check uniformed with all actual tables'meta data in once when loading them()
+
+uniformed, check, TableMetaDataViolation, data
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1737
+Diff:
+
+
+package io.shardingsphere.core.listener;
+
++ import io.shardingsphere.transaction.listener.base.SagaTransactionListener;
+import io.shardingsphere.transaction.listener.local.LocalTransactionListener;
+import io.shardingsphere.transaction.listener.xa.XATransactionListener;
+import lombok.AccessLevel;
+
+public static void register(){
+new LocalTransactionListener().register();
+new XATransactionListener().register();
++ new SagaTransactionListener().register();
+}
+}
+
+Language: java
+Generated Outputs:
+- SLM: add SagaTransactionListener
+
+- ICL: Added SagaTransactionListener to register()
+
+- PEFT: add SagaTransactionListener
+
+- NL: register saga transaction listener
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 481
+Diff:
+
+
+public ComputerConnectorTester computerConnectorTester=new ComputerConnectorTester(this);
+
++ /* *
++ * The directory where a war file gets exploded.
++ */
++ protected File explodedWarDir;
++
+protected HudsonTestCase(String name){
+super(name);
+}
+protected void setUp()throws Exception{
+
+//allow the test class to inject Jenkins components
+jenkins.lookup(Injector.class).injectMembers(this);
++ explodedWarDir=WarExploder.getExplodedDir();
+}
+
+
+public void setPluginManager(PluginManager pluginManager){
+protected ServletContext createWebServer()throws Exception{
+server=new Server();
+
+- WebAppContext context=new WebAppContext(WarExploder.getExplodedDir().getPath(),contextPath);
++ WebAppContext context=new WebAppContext(explodedWarDir.getPath(),contextPath);
+context.setClassLoader(getClass().getClassLoader());
+context.setConfigurations(new Configuration[]{new WebXmlConfiguration(),new NoListenerConfiguration()});
+server.setHandler(context);
+
+Language: java
+Generated Outputs:
+- SLM: Merge pull request from jsoref/jwilson_exploded_dir
+
+- ICL: BAEL - 3896:OpenAPI JSON Objects in Query Params - README file revert + required changes
+
+- PEFT: [JENKINS - 2099]Make sure the exploded war directory is available to the test
+
+- NL: exposing where the war file is exploded
+
+explod, war file, expose
+
+Evaluations:
+- Model: SLM
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 3
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 398
+Diff:
+distdir_tar(
+"c7bbde2950769aac9a99364b0926230060a3ce04.tar.gz",
+"8ccf4f1c351928b55d5dddf3672e3667f6978d60.tar.gz",
+"0.16.2.zip",
+- "android_tools_pkg-0.9.tar.gz",
++ "android_tools_pkg-0.10.tar.gz",
+# bazelbuild/platforms
+"441afe1bfdadd6236988e9cac159df6b5a9f5a98.zip",
+# bazelbuild/rules_java
+distdir_tar(
+"c7bbde2950769aac9a99364b0926230060a3ce04.tar.gz":"e6a76586b264f30679688f65f7e71ac112d1446681010a13bf22d9ca071f34b7",
+"8ccf4f1c351928b55d5dddf3672e3667f6978d60.tar.gz":"d868ce50d592ef4aad7dec4dd32ae68d2151261913450fac8390b3fd474bb898",
+"0.16.2.zip":"9b72bb0aea72d7cbcfc82a01b1e25bf3d85f791e790ddec16c65e2d906382ee0",
+- "android_tools_pkg-0.9.tar.gz":"23011efa92c7566ad0bcea69a90c9efeec1e96e73d865eb88a6dc934fe47db9b",# built at 43fc06881c9ec39712fbfa557b7df1137e3aeec3
++ "android_tools_pkg-0.10.tar.gz":"9c5081f93276fefb3db7ca61cc1225ff6d1913e7e315568265bb1a728265a9b1",# built at c91a9535302f13521a8875c384ff0b87639ce149
+# bazelbuild/platforms
+"441afe1bfdadd6236988e9cac159df6b5a9f5a98.zip":"a07fe5e75964361885db725039c2ba673f0ee0313d971ae4f50c9b18cd28b0b5",
+# bazelbuild/rules_java
+distdir_tar(
+"https://mirror.bazel.build/github.com/bazelbuild/rules_nodejs/archive/0.16.2.zip",
+"https://github.com/bazelbuild/rules_nodejs/archive/0.16.2.zip",
+],
+- "android_tools_pkg-0.9.tar.gz":[
+- "https://mirror.bazel.build/bazel_android_tools/android_tools_pkg-0.9.tar.gz",
++ "android_tools_pkg-0.10.tar.gz":[
++ "https://mirror.bazel.build/bazel_android_tools/android_tools_pkg-0.10.tar.gz",
+],
+# bazelbuild/platforms
+"441afe1bfdadd6236988e9cac159df6b5a9f5a98.zip":[
+distdir_tar(
+"zulu11.31.15-ca-jdk11.0.3-linux_aarch64.tar.gz",
+"zulu11.29.3-ca-jdk11.0.2-macosx_x64.zip",
+"zulu11.29.3-ca-jdk11.0.2-win_x64.zip",
+- "android_tools_pkg-0.9.tar.gz",
++ "android_tools_pkg-0.10.tar.gz",
+# bazelbuild/platforms
+"441afe1bfdadd6236988e9cac159df6b5a9f5a98.zip",
+# bazelbuild/rules_java
+distdir_tar(
+"zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz":"f3f44b6235508e87b760bf37a49e186cc1fa4e9cd28384c4dbf5a33991921e08",
+"zulu11.29.3-ca-jdk11.0.2-macosx_x64.zip":"059f8e3484bf07b63a8f2820d5f528f473eff1befdb1896ee4f8ff06be3b8d8f",
+"zulu11.29.3-ca-jdk11.0.2-win_x64.zip":"e1f5b4ce1b9148140fae2fcfb8a96d1c9b7eac5b8df0e13fbcad9b8561284880",
+- "android_tools_pkg-0.9.tar.gz":"23011efa92c7566ad0bcea69a90c9efeec1e96e73d865eb88a6dc934fe47db9b",# built at 43fc06881c9ec39712fbfa557b7df1137e3aeec3
++ "android_tools_pkg-0.10.tar.gz":"9c5081f93276fefb3db7ca61cc1225ff6d1913e7e315568265bb1a728265a9b1",# built at c91a9535302f13521a8875c384ff0b87639ce149
+# bazelbuild/platforms
+"441afe1bfdadd6236988e9cac159df6b5a9f5a98.zip":"a07fe5e75964361885db725039c2ba673f0ee0313d971ae4f50c9b18cd28b0b5",
+# bazelbuild/rules_java
+distdir_tar(
+"zulu11.31.15-ca-jdk11.0.3-linux_aarch64.tar.gz":["https://mirror.bazel.build/openjdk/azul-zulu11.31.15-ca-jdk11.0.3/zulu11.31.15-ca-jdk11.0.3-linux_aarch64.tar.gz"],
+"zulu11.29.3-ca-jdk11.0.2-macosx_x64.zip":["https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-macosx_x64.zip"],
+"zulu11.29.3-ca-jdk11.0.2-win_x64.zip":["https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-win_x64.zip"],
+- "android_tools_pkg-0.9.tar.gz":[
+- "https://mirror.bazel.build/bazel_android_tools/android_tools_pkg-0.9.tar.gz",
++ "android_tools_pkg-0.10.tar.gz":[
++ "https://mirror.bazel.build/bazel_android_tools/android_tools_pkg-0.10.tar.gz",
+],
+# bazelbuild/platforms
+"441afe1bfdadd6236988e9cac159df6b5a9f5a98.zip":[
+load("@bazel_tools//tools/build_defs/repo:http.bzl","http_archive")
+
+http_archive(
+name="android_tools",
+- url="https://mirror.bazel.build/bazel_android_tools/android_tools_pkg-0.9.tar.gz",
+- sha256="23011efa92c7566ad0bcea69a90c9efeec1e96e73d865eb88a6dc934fe47db9b",# built at 43fc06881c9ec39712fbfa557b7df1137e3aeec3
++ url="https://mirror.bazel.build/bazel_android_tools/android_tools_pkg-0.10.tar.gz",
++ sha256="9c5081f93276fefb3db7ca61cc1225ff6d1913e7e315568265bb1a728265a9b1",# built at c91a9535302f13521a8875c384ff0b87639ce149
+)
+
+
+set-euo pipefail
+
+# The version of android_tools.tar.gz
+- VERSION="0.9"
++ VERSION="0.10"
+VERSIONED_FILENAME="android_tools_pkg-$VERSION.tar.gz"
+
+# Create a temp directory to hold the versioned tarball,and clean it up when the script exits.
+
+Language: java
+Generated Outputs:
+- SLM: Update android_tools_pkg.
+
+- ICL: [Flink - 15135][e2e][Mesos]Adding Dockerfiles relevant to Mesos setup
+
+- PEFT: Update android_tools_pkg to 0.10.
+
+- NL: Update remote Android tools
+
+update, android, tools
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1290
+Diff:
+
+<!--Record your changes in the trunk here.-->
+<div id="trunk"style="display:none"><!--=TRUNK-BEGIN=-->
+<ul class=image>
+- <li class=>
++ <li class="major bug">
++ <strong>Important security fixes</strong>
++ (<a href="https://wiki.jenkins-ci.org/display/SECURITY/Jenkins+Security+Advisory+2017-02-01">security advisory</a>)
+</ul>
+</div><!--=TRUNK-END=-->
+<h3><a name=v2.43>What's new in 2.43</a>(2017/01/29)</h3>
+
+Language: java
+Generated Outputs:
+- SLM: Noting
+
+- ICL: MINOR:Fix state transition diagram for stream threads()
+
+- PEFT: [FIXED]Security fixes
+
+- NL: Add link to future security advisory URL for 2.44
+
+link, security, advisory
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 2
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1590
+Diff:
+public void writeString(String string,boolean append){
+writeString(string,append,null);
+}
+
+- /* * Writes the specified string to the file as UTF-8.Parent directories will be created if necessary.
++ /* * Writes the specified string to the file using the specified charset.Parent directories will be created if necessary.
+*@param append If false,this file will be overwritten if it exists,otherwise it will be appended.
+*@param charset May be null to use the default charset.
+*@throws GdxRuntimeException if this file handle represents a directory,if it is a{@link FileType # Classpath}or
+
+Language: java
+Generated Outputs:
+- SLM: Update FileType.java
+
+- ICL: Fix osx_cc_wrapper.sh for multiple rpaths
+
+- PEFT: Added charset parameter to FileHandle.writeString()
+
+- NL: Javadocs
+
+update, javadocs
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1605
+Diff:
+
+*/
+
+package org.elasticsearch.action.support;
+-
++ import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.ActionRequest;
+import org.elasticsearch.action.ActionRequestValidationException;
+import org.elasticsearch.action.ActionResponse;
+- import org.elasticsearch.common.component.AbstractComponent;
+import org.elasticsearch.tasks.Task;
+import org.elasticsearch.tasks.TaskListener;
+import org.elasticsearch.tasks.TaskManager;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+- public abstract class TransportAction<Request extends ActionRequest,Response extends ActionResponse>extends AbstractComponent{
++ public abstract class TransportAction<Request extends ActionRequest,Response extends ActionResponse>{
+
+protected final String actionName;
+private final ActionFilter[]filters;
+protected final TaskManager taskManager;
++ /* *
++ *@deprecated declare your own logger.
++ */
++ @Deprecated
++ protected Logger logger=LogManager.getLogger(getClass());
+
+protected TransportAction(String actionName,ActionFilters actionFilters,TaskManager taskManager){
+this.actionName=actionName;
+deleted file mode 100644
+index 1e0310c024736..0000000000000
+ppp/dev/null
+
+- /*
+- * Licensed to Elasticsearch under one or more contributor
+- * license agreements.See the NOTICE file distributed with
+- * this work for additional information regarding copyright
+- * ownership.Elasticsearch licenses this file to you under
+- * the Apache License,Version 2.0(the"License");you may
+- * not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- * http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing,
+- * software distributed under the License is distributed on an
+- *"AS IS"BASIS,WITHOUT WARRANTIES OR CONDITIONS OF ANY
+- * KIND,either express or implied.See the License for the
+- * specific language governing permissions and limitations
+- * under the License.
+- */
+-
+- package org.elasticsearch.common.component;
+-
+- import org.apache.logging.log4j.Logger;
+- import org.apache.logging.log4j.LogManager;
+-
+- /* *
+- *@deprecated declare your own logger
+- */
+- @Deprecated
+- public abstract class AbstractComponent{
+-
+- protected final Logger logger;
+-
+- public AbstractComponent(){
+- this.logger=LogManager.getLogger(getClass());
+- }
+- }
+
+*/
+
+package org.elasticsearch.rest;
+-
++ import org.apache.logging.log4j.LogManager;
++ import org.apache.logging.log4j.Logger;
+import org.apache.lucene.search.spell.LevenshteinDistance;
+import org.apache.lucene.util.CollectionUtil;
+import org.elasticsearch.client.node.NodeClient;
+import org.elasticsearch.common.CheckedConsumer;
+import org.elasticsearch.common.collect.Tuple;
+- import org.elasticsearch.common.component.AbstractComponent;
+import org.elasticsearch.common.settings.Setting;
+import org.elasticsearch.common.settings.Setting.Property;
+import org.elasticsearch.common.settings.Settings;
+
+* are copied,but a selected few.It is possible to control what headers are copied over by returning them in
+*{@link ActionPlugin # getRestHeaders()}.
+*/
+- public abstract class BaseRestHandler extends AbstractComponent implements RestHandler{
++ public abstract class BaseRestHandler implements RestHandler{
+
+public static final Setting<Boolean>MULTI_ALLOW_EXPLICIT_INDEX=
+Setting.boolSetting("rest.action.multi.allow_explicit_index",true,Property.NodeScope);
+
+private final LongAdder usageCount=new LongAdder();
++ /* *
++ *@deprecated declare your own logger.
++ */
++ @Deprecated
++ protected Logger logger=LogManager.getLogger(getClass());
+
+/* *
+* Parameter that controls whether certain REST apis should include type names in their requests or responses.
+
+Language: java
+Generated Outputs:
+- SLM: Remove unnecessary AbstractComponent dependency
+
+- ICL: #getHeaders()}
+
+- PEFT: Remove deprecated logger in TransportAction
+
+- NL: Remove Abstract Component()
+
+remove, AbstractComponent, TransportAction
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 2
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1236
+Diff:
+protected XBounds getXBounds(BarLineScatterCandleBubbleDataProvider chart,IBarL
+/* *
+* minimum visible entry index
+*/
+- public final int min;
++ public int min;
+
+/* *
+* maximum visible entry index
+*/
+- public final int max;
++ public int max;
+
+/* *
+* range of visible entry indices
+*/
+- public final int range;
++ public int range;
+
+/* *
+* Calculates the minimum and maximum x values as well as the range between them.
+protected XBounds getXBounds(BarLineScatterCandleBubbleDataProvider chart,IBarL
+*@param dataSet
+*/
+public XBounds(BarLineScatterCandleBubbleDataProvider chart,IBarLineScatterCandleBubbleDataSet dataSet){
++ this.set(chart,dataSet);
++ }
+
++ /* *
++ * Calculates the minimum and maximum x values as well as the range between them.
++ *
++ *@param chart
++ *@param dataSet
++ */
++ public void set(BarLineScatterCandleBubbleDataProvider chart,IBarLineScatterCandleBubbleDataSet dataSet){
+float phaseX=Math.max(0.f,Math.min(1.f,mAnimator.getPhaseX()));
+
+float low=chart.getLowestVisibleX();
+protected void drawCubicFill(Canvas c,ILineDataSet dataSet,Path spline,Transf
+}
+
+private float[]mLineBuffer=new float[4];
++ private XBounds xBoundsBuffer;
+
+/* *
+* Draws a normal line.
+protected void drawLinear(Canvas c,ILineDataSet dataSet){
+canvas=c;
+}
+
+- XBounds bounds=getXBounds(mChart,dataSet);
++ if(xBoundsBuffer==null){
++ xBoundsBuffer=getXBounds(mChart,dataSet);
++ }else{
++ xBoundsBuffer.set(mChart,dataSet);
++ }
++ final XBounds bounds=xBoundsBuffer;
+
+//more than 1 color
+if(dataSet.getColors().size()>1){
+
+Language: java
+Generated Outputs:
+- SLM: Add a setter for x bounds.
+
+- ICL: GT - 2759 Fixed 6502 processor module Zero Page indexed addressing.
+
+- PEFT: Fix XBounds.set()
+
+- NL: Eliminate allocs - Cache XBounds in Renderer()
+
+Renderer， XBounds，Cache
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 820
+Diff:
+
+<iterate operator="and">
+<or>
+<adapt type="org.jkiss.dbeaver.model.struct.DBSDataManipulator"/>
+- <adapt type="org.jkiss.dbeaver.model.struct.DBSObjectContainer">
+- <test property="org.jkiss.dbeaver.model.childOfType"value="org.jkiss.dbeaver.model.struct.DBSDataContainer"/>
+- </adapt>
++ <adapt type="org.jkiss.dbeaver.model.struct.rdb.DBSSchema"/>
++ <adapt type="org.jkiss.dbeaver.model.struct.rdb.DBSCatalog"/>
+</or>
+</iterate>
+</with>
+
+Language: java
+Generated Outputs:
+- SLM: SQL editor refactoring
+
+- ICL: Merge remote-tracking branch 'dakrone/add - dir - locals.el'
+
+- PEFT: DBN - fix schema/catalog adaptor
+
+- NL: Property tester fix
+
+fix, property
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 2
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 586
+Diff:
+
+<string name="msg_url_malform">Неисправан УРЛ или нема интернета</string>
+<string name="msg_running">Њупајп преузимање</string>
+<string name="msg_running_detail">Тапните за детаље</string>
+- <string name="msg_wait">Сачекајте...</string>
++ <string name="msg_wait">Сачекајте …</string>
+<string name="msg_copied">Копирано у привремену меморију.</string>
+<string name="no_available_dir">Одредите доступну фасциклу за преузимање.</string>
+
+
+
+
+"</string>
+- <string name="reCaptchaActivity">reCaptcha</string>
+- <string name="reCaptcha_title">reCaptcha стопка</string>
++ <string name="reCaptchaActivity">reCAPTCHA</string>
++ <string name="reCaptcha_title">reCAPTCHA стопка</string>
++
++ <string name="recaptcha_request_toast">Решите reCAPTCHA стопку</string>
+
+</resources>
+
+Language: java
+Generated Outputs:
+- SLM: Translated using Weblate(Russian)
+
+- ICL: Translated using Weblate(Russian)
+
+- PEFT: Translated using Weblate(Bulgarian)
+
+- NL: Translated using Weblate(Serbian)
+
+
+Translated，Weblate，Serbian
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1761
+Diff:
+protected boolean codecNeedsSetOutputSurfaceWorkaround(String name){
+case"ELUGA_Prim":
+case"ELUGA_Ray_X":
+case"EverStar_S":
++ case"F02H":
++ case"F03H":
+case"F3111":
+case"F3113":
+case"F3116":
+
+Language: java
+Generated Outputs:
+- SLM: Add F02H and F03H to output surface workaround
+
+- ICL: Add F02H, F03H
+
+- PEFT: Fix:F02H and F03H are not supported by the workaround
+
+- NL: apply output surface workaround for F02H, F03H
+
+add,workaround, F02H, F03H
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5 
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1861
+Diff:
+public long asPointer(VirtualFrame frame,Object obj)throws InteropException{
+@Override
+public Object toNative(VirtualFrame frame,Object obj)throws InteropException{
+LLVMTruffleObject object=(LLVMTruffleObject)obj;
+- Object nativeBase=lib.toNative(frame,object.getObject());
+- return new LLVMTruffleObject((TruffleObject)nativeBase,object.offset,object.type,object.baseType);
++ if(object.getObject()==null){
++ return object;
++ }else{
++ Object nativeBase=lib.toNative(frame,object.getObject());
++ return new LLVMTruffleObject((TruffleObject)nativeBase,object.offset,object.type,object.baseType);
++ }
+}
+};
+}
+
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+- import com.oracle.truffle.api.interop.ForeignAccess;
+import com.oracle.truffle.api.interop.InteropException;
+- import com.oracle.truffle.api.interop.Message;
+- import com.oracle.truffle.api.interop.TruffleObject;
+- import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.llvm.runtime.LLVMAddress;
+import com.oracle.truffle.llvm.runtime.LLVMBoxedPrimitive;
+- import com.oracle.truffle.llvm.runtime.LLVMTruffleObject;
+
+@NodeChild(type=LLVMExpressionNode.class)
+public abstract class LLVMToNativeNode extends LLVMNode{
+protected LLVMAddress doLLVMBoxedPrimitive(LLVMBoxedPrimitive from){
+}
+}
+
+- @Child private Node isNull=Message.IS_NULL.createNode();
+-
+- @Specialization(guards="isNull(pointer.getObject())")
+- protected LLVMAddress handleIsNull(LLVMTruffleObject pointer){
+- LLVMAddress base=LLVMAddress.nullPointer();
+- return base.increment(pointer.getOffset());
+- }
+-
+@Specialization(guards={"lib.guard(pointer)","lib.isPointer(frame,pointer)"})
+protected LLVMAddress handlePointerCached(VirtualFrame frame,Object pointer,
+@Cached("createCached(pointer)")LLVMObjectNativeLibrary lib){
+protected LLVMAddress transitionToNative(VirtualFrame frame,Object pointer,
+throw new IllegalStateException("Cannot convert"+pointer+"to LLVMAddress",e);
+}
+}
+-
+- protected boolean isNull(TruffleObject object){
+- return object==null||ForeignAccess.sendIsNull(isNull,object);
+- }
+-
+}
+
+import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
+
+public final class PointerType extends AggregateType{
++ public static final PointerType I8=new PointerType(PrimitiveType.I8);
+
+@CompilationFinal private Type pointeeType;
+@CompilationFinal private Assumption pointeeTypeAssumption;
+
+Language: java
+Generated Outputs:
+- SLM: Fix LLVMToNativeNode.handleIsNull.
+
+- ICL: Adds a new type to represent pointers to primitive types.
+
+- PEFT: LLVM:Fix handling of null pointers in LLVMToNativeNode
+
+- NL: [GR - 8425][GR - 8409][GR - 8404]Fixed toNative conversion of LLVMTruffleObject null - pointers.
+
+fix, LLVMTruffleObject, Null check， toNative
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1066
+Diff:
+Result compile()throws IOException{
+if(sources.isEmpty()){
+//accept compilations with an empty source list for compatibility with JavaBuilder
+emitClassJar(
+- Paths.get(turbineOptions.outputFile()),ImmutableMap.<String,OutputFileObject>of());
++ Paths.get(turbineOptions.outputFile()),
++ ImmutableMap.<String,OutputFileObject>of(),
++ turbineOptions);
+dependencyModule.emitDependencyInformation(/* classpath=*/"",/* successful=*/true);
+return Result.OK_WITH_REDUCED_CLASSPATH;
+}
+Result compile()throws IOException{
+}
+
+if(result.ok()){
+- emitClassJar(Paths.get(turbineOptions.outputFile()),compileResult.files());
++ emitClassJar(Paths.get(turbineOptions.outputFile()),compileResult.files(),turbineOptions);
+dependencyModule.emitDependencyInformation(
+CLASSPATH_JOINER.join(actualClasspath),compileResult.success());
+}
+private static DependencyModule buildDependencyModule(
+}
+
+/* * Write the class output from a successful compilation to the output jar.*/
+- private static void emitClassJar(Path outputJar,ImmutableMap<String,OutputFileObject>files)
++ private static void emitClassJar(
++ Path outputJar,ImmutableMap<String,OutputFileObject>files,TurbineOptions turbineOptions)
+throws IOException{
+try(OutputStream fos=Files.newOutputStream(outputJar);
+ZipOutputStream zipOut=
+private static void emitClassJar(Path outputJar,ImmutableMap<String,OutputFile
+continue;
+}
+if(name.endsWith(".class")){
+- bytes=processBytecode(bytes);
++ bytes=processBytecode(bytes,turbineOptions);
+}
+ZipUtil.storeEntry(name,bytes,zipOut);
+hasEntries=true;
+private static void emitClassJar(Path outputJar,ImmutableMap<String,OutputFile
+*<p>Most code will already have been removed after parsing,but the bytecode will still contain
+* e.g.lowered class and instance initializers.
+*/
+- private static byte[]processBytecode(byte[]bytes){
++ private static byte[]processBytecode(byte[]bytes,TurbineOptions turbineOptions){
+ClassWriter cw=new ClassWriter(0);
+new ClassReader(bytes)
+.accept(
+- new PrivateMemberPruner(cw),
++ new PrivateMemberPruner(cw,turbineOptions),
+ClassReader.SKIP_CODE|ClassReader.SKIP_FRAMES|ClassReader.SKIP_DEBUG);
+return cw.toByteArray();
+}
+private static void emitClassJar(Path outputJar,ImmutableMap<String,OutputFile
+* detect private members at that point(e.g.with implicit modifiers).
+*/
+static class PrivateMemberPruner extends ClassVisitor{
+- public PrivateMemberPruner(ClassVisitor cv){
++
++ private final boolean dropBridges;
++
++ public PrivateMemberPruner(ClassVisitor cv,TurbineOptions turbineOptions){
+super(Opcodes.ASM5,cv);
++ this.dropBridges=turbineOptions.javacOpts().contains("-XDdropBridgesInTurbine=true");
+}
+
+@Override
+public MethodVisitor visitMethod(
+//drop class initializers,which are going to be empty after tree pruning
+return null;
+}
+- if((access&(Opcodes.ACC_SYNTHETIC|Opcodes.ACC_BRIDGE))!=0){
+- //drop bridges(see b/31653210)
+- return null;
++ //drop synthetic methods,possibly including bridges(see b/31653210)
++ if((access&Opcodes.ACC_SYNTHETIC)==Opcodes.ACC_SYNTHETIC){
++ if(((access&Opcodes.ACC_BRIDGE)==0)||dropBridges){
++ return null;
++ }
+}
+return super.visitMethod(access,name,desc,signature,exceptions);
+}
+public void constants()throws Exception{
+@Test
+public void constantsEnum()throws Exception{
+addSourceLines(
+- "TheEnum.java",
+- //TODO(cushon):fix google-java-format's handling of lists of string literals
++ "TheEnum.java",//
+"public enum TheEnum{",
+"ONE,TWO,THREE;",
+"}");
+public void bridge()throws Exception{
+"public String call(){return\"\";}",
+"}");
+
++ optionsBuilder.addAllJavacOpts(ImmutableList.of("-XDdropBridgesInTurbine=true"));
+compile();
+
+Map<String,byte[]>outputs=collectOutputs();
+public void bridge()throws Exception{
+};
+assertThat(text).isEqualTo(Joiner.on('\n').join(expected));
+}
++
++ @Test
++ public void preserveBridge()throws Exception{
++ addSourceLines(
++ "Bridge.java",
++ "import java.util.concurrent.Callable;",
++ "class Bridge implements Callable<String>{",
++ "public String call(){return\"\";}",
++ "}");
++
++ compile();
++
++ Map<String,byte[]>outputs=collectOutputs();
++
++ assertThat(outputs.keySet()).containsExactly("Bridge.class");
++
++ String text=textify(outputs.get("Bridge.class"));
++ String[]expected={
++ "//class version 52.0(52)",
++ "//access flags 0x20",
++ "//signature Ljava/lang/Object;Ljava/util/concurrent/Callable<Ljava/lang/String;>;",
++ "//declaration:Bridge implements java.util.concurrent.Callable<java.lang.String>",
++ "class Bridge implements java/util/concurrent/Callable{",
++ "",
++ "",
++ "//access flags 0x0",
++ "<init>()V",
++ "",
++ "//access flags 0x1",
++ "public call()Ljava/lang/String;",
++ "",
++ "//access flags 0x1041",
++ "public synthetic bridge call()Ljava/lang/Object;throws java/lang/Exception",
++ "}",
++ ""
++ };
++ assertThat(text).isEqualTo(Joiner.on('\n').join(expected));
++ }
+}
+
+Language: java
+Generated Outputs:
+- SLM: Pass through turbine options to DependencyModule.emitClassJar
+
+- ICL: BAEL - 3896:OpenAPI JSON Objects in Query Params - README file revert + required changes
+
+- PEFT: Turbine:support -source 1.8
+
+- NL: Put turbine bridge pruning behind a flag
+
+turbine, emitClassJar, drop bridges
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 2
+  Conciseness: 3
+  Expressiveness: 4
+
+----------------------------------------
+

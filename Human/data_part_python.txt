@@ -1,0 +1,3222 @@
+ID: 1418
+Diff:
+def log_error(msg:str,link:bool=True)->None:
+if hasattr(component,'async_setup'):
+result=await component.async_setup(# type:ignore
+hass,processed_config)
+- else:
++ elif hasattr(component,'setup'):
+result=await hass.async_add_executor_job(
+component.setup,hass,processed_config)# type:ignore
++ else:
++ log_error("No setup function defined.")
++ return False
+except Exception:# pylint:disable=broad-except
+_LOGGER.exception("Error during setup of component%s",domain)
+async_notify_setup_error(hass,domain,True)
+def log_error(msg:str,link:bool=True)->None:
+for entry in hass.config_entries.async_entries(domain):
+await entry.async_setup(hass,integration=integration)
+
+- hass.config.components.add(component.DOMAIN)# type:ignore
++ hass.config.components.add(domain)
+
+# Cleanup
+if domain in hass.data[DATA_SETUP]:
+def log_error(msg:str,link:bool=True)->None:
+
+hass.bus.async_fire(
+EVENT_COMPONENT_LOADED,
+- {ATTR_COMPONENT:component.DOMAIN}# type:ignore
++ {ATTR_COMPONENT:domain}
+)
+
+return True
+
+Language: python
+Generated Outputs:
+- SLM: Handle no setup function in component startup()
+
+- ICL: [WIP]Fix component setup()
+
+- PEFT: Fix setup of components without async_setup()
+
+- NL: Make setup more robust()
+
+make,setup, async_setup, robust
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1198
+Diff:
+deps=
+
+[testenv:lint]
+basepython=python3
++ ignore_errors=True
+commands=
+flake8
+pylint homeassistant
+commands=
+basepython=python3
+deps=
+commands=
+- python script/gen_requirements_all.py validate
+\No newline at end of file
++ python script/gen_requirements_all.py validate
+
+Language: python
+Generated Outputs:
+- SLM: Ignore errors from linting
+
+- ICL: lint:add ignore_errors=True()
+
+- PEFT: Fix testenv:lint
+
+- NL: Execute all lint tests even if flake8 reports errors.
+
+ignore, Linting, errors
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1437
+Diff:
+def errorbar(self,x,y,yerr=None,xerr=None,
+markeredgewith.
+
+
+- Return value is a length 2 tuple.The first element is a list of
+- y symbol lines.The second element is a list of error bar lines.
++ Return value is a length 2 tuple.The first element is the
++ Line2D instance for the y symbol lines.The second element is
++ a list of error bar lines.
+"""
+if not self._hold:self.cla()
+# make sure all the args are iterable arrays
+def imshow(self,X,
+extent=None,
+shape=None,
+filternorm=1,
+- filterrad=4.0):
++ filterrad=4.0,
++ imlim=None):
+"""
+
+IMSHOW(X,cmap=None,norm=None,aspect=None,interpolation=None,
+def imshow(self,X,
+parameter,ie when interpolation is one of:'sinc',
+'lanczos'or'blackman'
+
++
+"""
+
+if not self._hold:self.cla()
+def imshow(self,X,
+
+corners=(xmin,ymin),(xmax,ymax)
+self.update_datalim(corners)
+- self.set_xlim((xmin,xmax))
+- self.set_ylim((ymin,ymax))
++ if self._autoscaleon:
++ self.set_xlim((xmin,xmax))
++ self.set_ylim((ymin,ymax))
+self.images.append(im)
+
+return im
+def draw_line_collection(self,segments,transform,clipbox,
+"""
+
+gc=self.new_gc()
+- gc.set_clip_rectangle(clipbox.get_bounds())
++ if clipbox is not None:
++ gc.set_clip_rectangle(clipbox)
+gc.set_dashes(* linestyle)
+
+Nc=len(colors)
+
+Language: python
+Generated Outputs:
+- SLM: Merge pull request from meeseeksmachine/auto - backport - of - pr - 14456 - on - v3.2.x
+
+- ICL: fix imshow()
+
+- PEFT: Fix imshow() to return the Line2D instance for the y symbol lines.
+
+- NL: fixed a ps collection but
+
+Fix, imshow, Line2D
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1298
+Diff:
+def fit(self,X,y):
+tree.fit(X,gradient)
+gradient_est=tree.predict(X)
+
+- # Turn shape(n,1)to(n,)
+- if np.shape(gradient_est)[1]==1:
+- gradient_est=np.array(gradient_est)[:,0]
++ # Make sure shape is same as y_pred
++ gradient_est=np.array(gradient_est).reshape(np.shape(y_pred))
+
+# Update y prediction by the estimated gradient value
+y_pred-=np.multiply(self.learning_rate,gradient_est)
+def predict(self,X):
+# Make predictions
+for tree in self.trees:
+prediction=tree.predict(X)
+- # Turn shape(n,1)to(n,)
+- if np.shape(prediction)[1]==1:
+- prediction=np.array(prediction)[:,0]
++ prediction=np.array(prediction).reshape(np.shape(y_pred))
+y_pred-=np.multiply(self.learning_rate,prediction)
+
+if not self.regression:
+def_rules_from_itemset(self,initial_itemset,itemset):
+# If there are subsets that could result in rules
+# recursively add rules from subsets
+if k-1>1:
+- rules.append(self._rules_from_itemset(initial_itemset,subset))
++ rules+=self._rules_from_itemset(initial_itemset,antecedent)
+return rules
+
+def generate_rules(self,transactions):
+def generate_rules(self,transactions):
+rules=[]
+for itemset in frequent_itemsets:
+rules+=self._rules_from_itemset(itemset,itemset)
++ # Remove empty values
+return rules
+
+
+def main():
+# Example 2:https://en.wikipedia.org/wiki/Apriori_algorithm
+transactions=np.array([[1,2,3,4],[1,2,4],[1,2],[2,3,4],[2,3],[3,4],[2,4]])
+print("-Apriori-")
+- min_sup=3/7
++ min_sup=0.2
+min_conf=0.8
+print("Minimum-support:%.2f,confidence:%s"%(min_sup,min_conf))
+print("Transactions:")
+
+Language: python
+Generated Outputs:
+- SLM: [RLlib]Improve logic inApriori algorithm()
+
+- ICL: BLD:fix apriori()
+
+- PEFT: Fix bug in Apriori algorithm
+
+- NL: Apriori:Rule generation fix.
+
+Apriori Algorithm, Rule, fix 
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 532
+Diff:
+As you can see,Alice's wallet contains enough bitcoin in a single unspent outpu
+
+((("outputs and inputs","creating outputs")))A transaction output is created in the form of a script that creates an encumbrance on the value and can only be redeemed by the introduction of a solution to the script.In simpler terms,Alice's transaction output will contain a script that says something like,"This output is payable to whoever can present a signature from the key corresponding to Bob's public address."Because only Bob has the wallet with the keys corresponding to that address,only Bob's wallet can present such a signature to redeem this output.Alice will therefore"encumber"the output value with a demand for a signature from Bob.
+
+- This transaction will also include a second output,because Alice's funds are in the form of a 0.10 BTC output,too much money for the 0.015 BTC cup of coffee.Alice will need 0.085 BTC in change.Alice's change payment is created by Alice's wallet as an output in the very same transaction as the payment to Bob.Essentially,Alice's wallet breaks her funds into two payments:one to Bob and one back to herself.She can then use(spend)the change output in a subsequent transaction.Alice's existing adddress is reused in this example for clarity.For"Best Practice,"Alice's payment back to herself would go to a completely new address.
++ This transaction will also include a second output,because Alice's funds are in the form of a 0.10 BTC output,too much money for the 0.015 BTC cup of coffee.Alice will need 0.085 BTC in change.Alice's change payment is created by Alice's wallet as an output in the very same transaction as the payment to Bob.Essentially,Alice's wallet breaks her funds into two payments:one to Bob and one back to herself.She can then use(spend)the change output in a subsequent transaction.
+
+Finally,for the transaction to be processed by the network in a timely fashion,Alice's wallet application will add a small fee.This is not explicit in the transaction;it is implied by the difference between inputs and outputs.If instead of taking 0.085 in change,Alice creates only 0.0845 as the second output,there will be 0.0005 BTC(half a millibitcoin)left over.The input's 0.10 BTC is not fully spent with the two outputs,because they will add up to less than 0.10.The resulting difference is the_transaction fee_that is collected by the miner as a fee for validating and including the transaction in a block to be recorded on the blockchain.
+
+
+Language: python
+Generated Outputs:
+- SLM: Edited ch02.asciidoc with Atlas code editor
+
+- ICL: Merge pull request from kevincobain2000/feature/toc
+
+- PEFT: Merge pull request from bitcoin/bitcoin - docs - 0.10.0 - 0.11.0
+
+- NL: ch02:Drop string regarding reuse
+
+string, update, ch02
+
+Evaluations:
+- Model: SLM
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 3
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+----------------------------------------
+
+ID: 425
+Diff:
+def_real_extract(self,url):
+webpage,'content item id',default=None,group='id')
+
+content_item_ids=set()
+- content_item_ids.add(content_item_id)
++ if content_item_id:
++ content_item_ids.add(content_item_id)
+if video_id not in content_item_ids:
+content_item_ids.add(video_id)
+
+
+Language: python
+Generated Outputs:
+- SLM: [extractor/common]Keep going to fail if item not found
+
+- ICL: fix:add content_item_id to content_item_ids()
+
+- PEFT: [youtube]Add content item id to youtube.com
+
+- NL: [rai]Skip not found content item id
+
+skip, item id, not found, content
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1882
+Diff:
+
+from__future__import absolute_import
+from.core import srng,MaskedLayer
+import theano
++ import theano.tensor as T
+
+class GaussianNoise(MaskedLayer):
+'''
+def get_config(self):
+return{"name":self.__class__.__name__,
+"sigma":self.sigma}
+
+- class GaussianDropout(Layer):
++ class GaussianDropout(MaskedLayer):
+'''
+Multiplicative Gaussian Noise
+Reference:
+
+Language: python
+Generated Outputs:
+- SLM: Another small typo fix
+
+- ICL: Merge pull request from jeannefukumaru/gaussian_dropout
+
+- PEFT: Added theano.tensor import to GaussianDropout
+
+- NL: GaussianNoise has to be MaskedLayer instead of Layer
+
+MaskedLayer, fix, GaussianNoise, Layer
+
+Evaluations:
+- Model: SLM
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 2
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 951
+Diff:
+What's New in Python 3.6.0 beta 4
+Core and Builtins
+mmmmmmmmmmmmmmm--
+
++ -Issue # 28746:Fix the set_inheritable()file descriptor method on platforms
++ that do not have the ioctl FIOCLEX and FIONCLEX commands.
++
+- Issue # 26920:Fix not getting the locale's charset upon initializing the
+interpreter,on platforms that do not have langinfo.
+
+set_inheritable(int fd,int inheritable,int raise,int * atomic_flag_works)
+return 0;
+}
+
+- res=fcntl(fd,F_SETFD,flags);
++ res=fcntl(fd,F_SETFD,new_flags);
+if(res<0){
+if(raise)
+PyErr_SetFromErrno(PyExc_OSError);
+
+Language: python
+Generated Outputs:
+- SLM: Fix the set_inheritable()file descriptor method on platforms
+
+- ICL: bpo - 31893:Fixed select.kqueue().()
+
+- PEFT: Issue:Fix set_inheritable()on platforms that do not have FIOCLEX and FIONCLEX commands.
+
+- NL: Issue:Fix the set_inheritable()file descriptor method on platforms
+
+Fix, set_inheritable(), platforms
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1275
+Diff:
+def query_obj(self):
+self.series=form_data.get('series')or self.entity
+d['row_limit']=form_data.get('limit')
+
+- d['metrics']=[
++ d['metrics']=list(set([
+self.z_metric,
+self.x_metric,
+self.y_metric,
+- ]
++ ]))
+if not all(d['metrics']+[self.entity]):
+raise Exception(_('Pick a metric for x,y and size'))
+return d
+
+Language: python
+Generated Outputs:
+- SLM: Use a set instead of a list to store the metrics in the dict
+
+- ICL: Added Lambda commands.
+
+- PEFT: [MARKET]Fix:Fix duplicate metrics in chart
+
+- NL: [bubbles]issue when using duplicated metrics()
+
+
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 3
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1264
+Diff:
+def to_rgba(c,alpha=None):
+
+Parameters
+mmmmmmmmm-
+- c:Matplotlib color
++ c:Matplotlib color or ` ` np.ma.masked ` `
+
+alpha:scalar,optional
+If * alpha * is not ` ` None ` `,it forces the alpha value,except if * c * is
+def_to_rgba_no_colorcycle(c,alpha=None):
+` `"none"` `(case-insensitive),which always maps to ` `(0,0,0,0)` `.
+"""
+orig_c=c
++ if c is np.ma.masked:
++ return(0.,0.,0.,0.)
+if isinstance(c,str):
+if c.lower()=="none":
+return(0.,0.,0.,0.)
+def to_rgba_array(c,alpha=None):
+
+If * alpha * is not ` ` None ` `,it forces the alpha value.If * c * is
+` `"none"` `(case-insensitive)or an empty list,an empty array is returned.
++ If * c * is a masked array,an ndarray is returned with a(0,0,0,0)
++ row for each masked value or row in * c *.
+"""
+# Special-case inputs that are already arrays,for performance.(If the
+# array has the wrong kind or shape,raise the error during one-at-a-time
+# conversion.)
+if(isinstance(c,np.ndarray)and c.dtype.kind in"if"
+and c.ndim==2 and c.shape[1]in[3,4]):
++ mask=c.mask.any(axis=1)if np.ma.is_masked(c)else None
++ c=np.ma.getdata(c)
+if c.shape[1]==3:
+result=np.column_stack([c,np.zeros(len(c))])
+result[:,-1]=alpha if alpha is not None else 1.
+def to_rgba_array(c,alpha=None):
+result=c.copy()
+if alpha is not None:
+result[:,-1]=alpha
++ if mask is not None:
++ result[mask]=0
+if np.any((result<0)|(result>1)):
+raise ValueError("RGBA values should be within 0-1 range")
+return result
+def test_conversions():
+hex_color
+
+
++ def test_conversions_masked():
++ x1=np.ma.array(['k','b'],mask=[True,False])
++ x2=np.ma.array([[0,0,0,1],[0,0,1,1]])
++ x2[0]=np.ma.masked
++ assert mcolors.to_rgba(x1[0])==(0,0,0,0)
++ assert_array_equal(mcolors.to_rgba_array(x1),
++ [[0,0,0,0],[0,0,1,1]])
++ assert_array_equal(mcolors.to_rgba_array(x2),mcolors.to_rgba_array(x1))
++
++
+def test_to_rgba_array_single_str():
+# single color name is valid
+assert_array_equal(mcolors.to_rgba_array("red"),[(1,0,0,1)])
+
+Language: python
+Generated Outputs:
+- SLM: Merge pull request from QuLogic/maskedresult
+
+- ICL: add a test for masked arrays
+
+- PEFT: Merge pull request from mpl
+
+- NL: Merge pull request from efiring/masked_to_rgba
+
+test, Color, Masked Arrays
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 3
+
+----------------------------------------
+
+ID: 273
+Diff:
+
+<div id="integration-instruction-block"class="integration-instruction-block">
+<a href="#"id="integration-list-link"><i class="icon-vector-circle-arrow-left"></i><span>Back to list</span></a>
+</div>
++ <div class="clear-float"></div>
+
+<div class="integration-lozenges">
+{%for integration in integrations_dict.values()%}
+
+Language: python
+Generated Outputs:
+- SLM: Clean - up integration list.
+
+- ICL: DOC:add integration lozenges()
+
+- PEFT: Fix integration list layout
+
+- NL: integrations:Clear float after#integration - instruction - block.
+
+integration, clear-float, div
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 2
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 2
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 741
+Diff:
+var IPython=(function(IPython){
+while(s&&tem2.indexOf(tem1)==-1){
+tem1=tem1.substring(0,--s);
+}
+- if(tem1==""){return null;}
++ if(tem1==""||tem2.indexOf(tem1)!=0){return null;}
+return{str:tem1,
+type:"computed",
+from:B[0].from,
+var IPython=(function(IPython){
+//Check that shared start is not null which can append with prefixed completion
+//like%pylab,pylab have no shred start,and ff will result in py<tab><tab>
+//to erase py
+- var sh=sharedStart(this.raw_result)
++ var sh=sharedStart(this.raw_result);
+if(sh){
+this.insert(sh);
+}
+
+Language: python
+Generated Outputs:
+- SLM: Merge pull request from Carreau/prevent - empty - temp
+
+- ICL: Merge pull request from jeannefukumaru/fix_shared_start
+
+- PEFT: Fix completion bug
+
+- NL: fix replace range bug
+
+fix, range, bug
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1854
+Diff:
+new file mode 100644
+index 0000000000000..42db0388ca5d9
+mmm/dev/null
+
++ .._whatsnew_0190:
++
++ v0.19.0(????,2016)
++ mmmmmmmmmmmmmmmmmm--
++
++ This is a major release from 0.18.2 and includes a small number of API changes,several new features,
++ enhancements,and performance improvements along with a large number of bug fixes.We recommend that all
++ users upgrade to this version.
++
++ Highlights include:
++
++
++ Check the:ref:` API Changes<whatsnew_0190.api_breaking>` and:ref:` deprecations<whatsnew_0190.deprecations>` before updating.
++
++ ..contents::What's new in v0.19.0
++ :local:
++ :backlinks:none
++
++ .._whatsnew_0190.enhancements:
++
++ New features
++ ~~~~~~~~~~~~
++
++
++
++
++
++ .._whatsnew_0190.enhancements.other:
++
++ Other enhancements
++ ^^^^^^^^^^^^^^^^^^
++
++
++
++
++
++
++ .._whatsnew_0190.api_breaking:
++
++ Backwards incompatible API changes
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++
++ .._whatsnew_0190.api:
++
++
++
++
++
++
++ Other API Changes
++ ^^^^^^^^^^^^^^^^^
++
++ .._whatsnew_0190.deprecations:
++
++ Deprecations
++ ^^^^^^^^^^^^
++
++
++
++
++
++ .._whatsnew_0190.prior_deprecations:
++
++ Removal of prior version deprecations/changes
++ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++
++
++
++
++ .._whatsnew_0190.performance:
++
++ Performance Improvements
++ ~~~~~~~~~~~~~~~~~~~~~~~~
++
++
++
++
++
++ .._whatsnew_0190.bug_fixes:
++
++ Bug Fixes
++ ~~~~~~~~~
+
+Language: python
+Generated Outputs:
+- SLM: DOC:v0.19.0.txt whatsnew
+
+- ICL: DOC:add 0.19.0 whatsnew file()
+
+- PEFT: Add what's new for 0.19.0
+
+- NL: DOC:add v0.19.0 whatsnew doc
+
+add, doc, 0.19.0
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 206
+Diff:
+
+import warnings
+import numpy as np
+import matplotlib as mpl
++ from itertools import(cycle,islice)
+
+from.import glyphs,objects
+
+def_map_line_props(newline,line2d):
+setattr(newline,"line_dash",_convert_dashes(line2d.get_linestyle()))
+# setattr(newline,"line_dash_offset",...)
+
++
++ def_get_colors_recur(col):
++ # We need to cycle the ` get.colors ` list as matplotlib does.
++ n=len(col.get_segments())
++ colors=[tuple(c)for c in col.get_colors()]
++ sliced=islice(cycle(colors),None,n+1)
++ return list(sliced)
++
++
++ def_map_line_col_props(newmultiline,col):
++ # setattr(newmultiline,"line_color",'# ef1488ff')# this line works OK
++ setattr(newmultiline,"line_color",_get_colors_recur(col))
++ setattr(newmultiline,"line_width",col.get_linewidth())
++ setattr(newmultiline,"line_alpha",col.get_alpha())
++
++
+def_convert_dashes(dash):
+"""Converts a Matplotlib dash specification
+
+def_make_line(datasource,xdr,ydr,line2d):
+
+def_make_lines_collection(datasource,xdr,ydr,col):
+newmultiline=glyphs.MultiLine()
++ _map_line_col_props(newmultiline,col)
+xydata=col.get_segments()
+t_xydata=[np.transpose(seg)for seg in xydata]
+xs=[t_xydata[x][0]for x in range(len(t_xydata))]
+
+Language: python
+Generated Outputs:
+- SLM: Merge pull request from Carreau/multiline - colors
+
+- ICL: DOC:add a blitting tutorial
+
+- PEFT: Added support for line collections
+
+- NL: Added support for widht, alpha, and coloring(at least one color now).
+
+add, support, widht/alpha/color
+
+Evaluations:
+- Model: SLM
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 252
+Diff:
+def_parse_format_specifier(format_spec,_localeconv=None):
+raise ValueError("Alignment conflicts with'0'in"
+"format specifier:"+format_spec)
+format_dict['fill']=fill or''
+- format_dict['align']=align or'<'
++ # PEP 3101 originally specified that the default alignment should
++ # be left;it was later agreed that right-aligned makes more sense
++ # for numeric types.See http://bugs.python.org/issue6857.
++ format_dict['align']=align or'>'
+
+# default sign handling:'-'for negative,''for positive
+if format_dict['sign']is None:
+def test_formatting(self):
+('','1.00','1.00'),
+
+# test alignment and padding
++ ('6','123','123'),
+('<6','123','123'),
+('>6','123','123'),
+('^6','123','123'),
+def test_formatting(self):
+(',','-1234567','-1,234,567'),
+(',','-123456','-123,456'),
+('7,','123456','123,456'),
+- ('8,','123456','123,456'),
++ ('8,','123456','123,456'),
+('08,','123456','0,123,456'),# special case:extra 0 needed
+('+08,','123456','+123,456'),# but not if there's a sign
+('08,','123456','123,456'),
+Core and Builtins
+Library
+mmmmmm-
+
++ -Issue # 6857:Default format()alignment should be'>'for Decimal
++ instances.
++
+- Issue # 6795:int(Decimal('nan'))now raises ValueError instead of
+returning NaN or raising InvalidContext.Also,fix infinite recursion
+in long(Decimal('nan')).
+
+Language: python
+Generated Outputs:
+- SLM: Merged revisions 7857 via svnmerge from
+
+- ICL: [WIP]Fix issue # 6857:Default format()alignment should be'
+
+- PEFT: Issue:Default format()alignment should be'
+
+- NL: Issue:Fix Decimal formatting to be consistent with existing float
+
+fix, formatting, float, consistent with
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 2
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 3
+
+----------------------------------------
+
+ID: 956
+Diff:
+def main():
+global apt,apt_pkg
+import apt
+import apt_pkg
+- except:
++ except ImportError:
+module.fail_json(msg="Could not import python modules:apt,apt_pkg.Please install python-apt package.")
+
+global APTITUDE_CMD
+
+Language: python
+Generated Outputs:
+- SLM: Fix python - apt_pkg error handling
+
+- ICL: aptitude:add aptitude command
+
+- PEFT: Fix import error message
+
+- NL: Merge pull request from radeksimko/pokemon - exc - fix
+
+update, ImportError, apt_pkg
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1044
+Diff:
+
+"""
+Test the fastica algorithm.
+"""
+-
++ import warnings
+import numpy as np
+from numpy.testing import assert_almost_equal
+from nose.tools import assert_true
+def test_fastica_nowhiten():
+ica.get_mixing_matrix()
+
+# test for issue # 697
+- ica=FastICA(n_components=1,whiten=False)
+- ica.fit(m)# should raise warning
++ with warnings.catch_warnings(record=True)as w:
++ warnings.simplefilter("always")
++ ica=FastICA(n_components=1,whiten=False)
++ ica.fit(m)# should raise warning
++ assert_true(len(w)==1)# 1 warning should be raised
+
+
+def test_non_square_fastica(add_noise=False):
+
+Language: python
+Generated Outputs:
+- SLM: TST:Fix test_fastica_nowhiten for.
+
+- ICL: Fix fastica test
+
+- PEFT: Merge pull request from mne-tools/fix - fastica - warnings
+
+- NL: TST:capture warning in test
+
+capture, test, warning
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 4 
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 921
+Diff:
+
+MOCK_REMOTE_DIR)
+
+
++ def_check_trial_running(trial):
++ if trial.runner:
++ ray.get(trial.runner.get_info.remote())
++ return True
++ return False
++
++
++ def_get_running_trials(runner):
++ return[t for t in runner.get_trials()if t.status==Trial.RUNNING]
++
++
+def_start_new_cluster():
+cluster=Cluster(
+initialize_head=True,
+def test_counting_resources(start_connected_cluster):
+runner.add_trial(t)
+
+runner.step()# run 1
++ running_trials=_get_running_trials(runner)
++ assert len(running_trials)==1
++ assert_check_trial_running(running_trials[0])
++ assert ray.available_resources().get("CPU",0)==0
+nodes+=[cluster.add_node(num_cpus=1)]
+cluster.wait_for_nodes()
+assert ray.cluster_resources()["CPU"]==2
+def test_remove_node_before_result(start_connected_emptyhead_cluster):
+trial=Trial("__fake",* * kwargs)
+runner.add_trial(trial)
+
+- runner.step()# Start trial
++ runner.step()# Start trial,call_train once
++ running_trials=_get_running_trials(runner)
++ assert len(running_trials)==1
++ assert_check_trial_running(running_trials[0])
++ assert not trial.last_result
+assert trial.status==Trial.RUNNING
+cluster.remove_node(node)
+cluster.add_node(num_cpus=1)
+cluster.wait_for_nodes()
+assert ray.cluster_resources()["CPU"]==1
+
+- # Process result(x2),process save,process result.
+- for_in range(4):
+- runner.step()
++ # Process result:fetch data,invoke_train again
++ runner.step()
++ assert trial.last_result.get("training_iteration")==1
++
++ # Process result:discover failure,recover,_train(from scratch)
++ runner.step()
++
++ runner.step()# Process result,invoke_train
++ assert trial.last_result.get("training_iteration")==1
++ runner.step()# Process result,invoke_save
++ assert trial.last_result.get("training_iteration")==2
++ # process save,invoke_train
++ runner.step()
++ # process result
++ runner.step()
+assert trial.status==Trial.TERMINATED
+
+with pytest.raises(TuneError):
+def test_trial_migration(start_connected_emptyhead_cluster,trainable_id):
+runner.step()
+
+
+- @pytest.mark.skip(reason="Not very consistent.")
+@pytest.mark.parametrize("trainable_id",["__fake","__fake_durable"])
+def test_trial_requeue(start_connected_emptyhead_cluster,trainable_id):
+"""Removing a node in full cluster causes Trial to be requeued."""
+def test_trial_requeue(start_connected_emptyhead_cluster,trainable_id):
+runner.step()# Process result,dispatch save
+runner.step()# Process save
+
++ running_trials=_get_running_trials(runner)
++ assert len(running_trials)==1
++ assert_check_trial_running(running_trials[0])
+cluster.remove_node(node)
+cluster.wait_for_nodes()
+runner.step()# Process result,dispatch save
+
+Language: python
+Generated Outputs:
+- SLM: [Cluster]Prevent flooding of running trials in start - cluster()
+
+- ICL: Trial migration test
+
+- PEFT: Fix test_remove_node_before_result()
+
+- NL: [tune]Check actor start ->test_cluster()
+
+check,  Trial, Cluster , start
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 812
+Diff:
+static void timer_callback(CFRunLoopTimerRef timer,void * info)
+static bool verify_framework(void)
+{
+# ifdef COMPILING_FOR_10_6
++ NSAutoreleasePool * pool=[[NSAutoreleasePool alloc]init];
+NSRunningApplication * app=[NSRunningApplication currentApplication];
+NSApplicationActivationPolicy activationPolicy=[app activationPolicy];
++ [pool release];
+switch(activationPolicy){
+case NSApplicationActivationPolicyRegular:
+case NSApplicationActivationPolicyAccessory:
+void init_macosx(void)
+
+PyOS_InputHook=wait_for_stdin;
+
++ NSAutoreleasePool * pool=[[NSAutoreleasePool alloc]init];
+WindowServerConnectionManager * connectionManager=[WindowServerConnectionManager sharedManager];
+NSWorkspace * workspace=[NSWorkspace sharedWorkspace];
+NSNotificationCenter * notificationCenter=[workspace notificationCenter];
+void init_macosx(void)
+selector:@selector(launch:)
+name:NSWorkspaceDidLaunchApplicationNotification
+object:nil];
++ [pool release];
+# if PY3K
+return module;
+# endif
+
+Language: python
+Generated Outputs:
+- SLM: [SF 710733 - Martin v.Loewis]Use NSAutoreleasePool init
+
+- ICL: Added a pool to avoid memory leaks
+
+- PEFT: Fix memory leak in macosx.c
+
+- NL: Merge pull request from mdehoon/fixForIssue5473
+
+Memory Management, NSAutoreleasePool,
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 431
+Diff:
+@@-1+1@@
+- Subproject commit 27026d1f4a13afceb794a176f01cad9c1b37dc3b
++ Subproject commit 8de48eabb36e3a243026195e67f9a5521d8ecd5e
+
+Language: python
+Generated Outputs:
+- SLM: Update submodule refs
+
+- ICL: update submodule
+
+- PEFT: Merge pull request from jd/master
+
+- NL: Update netdisco to latest version
+
+update, version 
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1575
+Diff:
+class RayConfig{
+
+int num_workers_per_process()const{return num_workers_per_process_;}
+
++ int64_t max_task_lease_timeout_ms()const{return max_task_lease_timeout_ms_;}
++
+void initialize(const std::unordered_map<std::string,int>&config_map){
+RAY_CHECK(!initialized_);
+for(auto const&pair:config_map){
+class RayConfig{
+object_manager_default_chunk_size_=pair.second;
+}else if(pair.first=="object_manager_repeated_push_delay_ms"){
+object_manager_repeated_push_delay_ms_=pair.second;
++ }else if(pair.first=="max_task_lease_timeout_ms"){
++ max_task_lease_timeout_ms_=pair.second;
+}else{
+RAY_LOG(FATAL)<<"Received unexpected config parameter"<<pair.first;
+}
+class RayConfig{
+object_manager_repeated_push_delay_ms_(60000),
+object_manager_default_chunk_size_(1000000),
+num_workers_per_process_(1),
++ max_task_lease_timeout_ms_(60 * 1000),
+initialized_(false){}
+
+~RayConfig(){}
+class RayConfig{
+///Number of workers per process
+int num_workers_per_process_;
+
++ //Maximum timeout in milliseconds within which a task lease must be renewed.
++ int64_t max_task_lease_timeout_ms_;
++
+///Whether the initialization of the instance has been called before.
+///The RayConfig instance can only(and must)be initialized once.
+bool initialized_;
+void TaskDependencyManager::AcquireTaskLease(const TaskID&task_id){
+});
+
+it->second.expires_at=now_ms+it->second.lease_period;
+- it->second.lease_period *=2;
++ it->second.lease_period=std::min(it->second.lease_period * 2,
++ RayConfig::instance().max_task_lease_timeout_ms());
+}
+
+void TaskDependencyManager::TaskCanceled(const TaskID&task_id){
+
+Language: python
+Generated Outputs:
+- SLM: [Core]Add support for max_task_lease_timeout_ms()
+
+- ICL: Added max_task_lease_timeout_ms_
+
+- PEFT: Add max_task_lease_timeout_ms_to RayConfig.
+
+- NL: Cap task lease timeout()
+
+task, timeout, Configuration/RayConfig
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 110
+Diff:
+Because of the size of IPv6 subnets,iteration over all of them to find the
+correct one may take some time on slower computers,depending on the size
+difference between subnets.
+
++ Subnet Merging
++ ^^^^^^^^^^^^^^
++
++ ..versionadded::2.6
++
++ The ` cidr_merge ` filter can be used to merge subnets or individual addresses
++ into their minimal representation,collapsing overlapping subnets and merging
++ adjacent ones wherever possible::
++
++ {{['192.168.0.0/17','192.168.128.0/17','192.168.128.1']|cidr_merge}}
++ #=>['192.168.0.0/16']
++
++ {{['192.168.0.0/24','192.168.1.0/24','192.168.3.0/24']|cidr_merge}}
++ #=>['192.168.0.0/23','192.168.3.0/24']
++
++ Changing the action from'merge'to'span'will instead return the smallest
++ subnet which contains all of the inputs::
++
++ {{['192.168.0.0/24','192.168.3.0/24']|cidr_merge('span')}}
++ #=>'192.168.0.0/22'
++
++ {{['192.168.1.42','192.168.42.1']|cidr_merge('span')}}
++ #=>'192.168.0.0/18'
+
+MAC address filter
+^^^^^^^^^^^^^^^^^^
+def_win_query(v):
+
+
+# mmm-IP address and network filters mmm-
++
++ # Returns a minified list of subnets or a single subnet that spans all of
++ # the inputs.
++ def cidr_merge(value,action='merge'):
++ if not hasattr(value,'__iter__'):
++ raise errors.AnsibleFilterError('cidr_merge:expected iterable,got'+repr(value))
++
++ if action=='merge':
++ try:
++ return[str(ip)for ip in netaddr.cidr_merge(value)]
++ except Exception as e:
++ raise errors.AnsibleFilterError('cidr_merge:error in netaddr:\n%s'%e)
++
++ elif action=='span':
++ # spanning_cidr needs at least two values
++ if len(value)==0:
++ return None
++ elif len(value)==1:
++ try:
++ return str(netaddr.IPNetwork(value[0]))
++ except Exception as e:
++ raise errors.AnsibleFilterError('cidr_merge:error in netaddr:\n%s'%e)
++ else:
++ try:
++ return str(netaddr.spanning_cidr(value))
++ except Exception as e:
++ raise errors.AnsibleFilterError('cidr_merge:error in netaddr:\n%s'%e)
++
++ else:
++ raise errors.AnsibleFilterError("cidr_merge:invalid action'%s'"%action)
++
++
+def ipaddr(value,query='',version=False,alias='ipaddr'):
+'''Check if string is an IP address or network and filter it'''
+
+class FilterModule(object):
+'''IP address and network manipulation filters'''
+filter_map={
+# IP addresses and networks
++ 'cidr_merge':cidr_merge,
+'ipaddr':ipaddr,
+'ipwrap':ipwrap,
+'ip4_hex':ip4_hex,
+
+
+from ansible.compat.tests import unittest
+from ansible.plugins.filter.ipaddr import(ipaddr,_netmask_query,nthhost,next_nth_usable,
+- previous_nth_usable,network_in_usable,network_in_network)
++ previous_nth_usable,network_in_usable,network_in_network,cidr_merge)
+netaddr=pytest.importorskip('netaddr')
+
+
+def test_network_in_network(self):
+subnet='1.12.1.0/24'
+address='1.12.2.0'
+self.assertEqual(network_in_network(subnet,address),False)
++
++ def test_cidr_merge(self):
++ self.assertEqual(cidr_merge([]),[])
++ self.assertEqual(cidr_merge([],'span'),None)
++ subnets=['1.12.1.0/24']
++ self.assertEqual(cidr_merge(subnets),subnets)
++ self.assertEqual(cidr_merge(subnets,'span'),subnets[0])
++ subnets=['1.12.1.0/25','1.12.1.128/25']
++ self.assertEqual(cidr_merge(subnets),['1.12.1.0/24'])
++ self.assertEqual(cidr_merge(subnets,'span'),'1.12.1.0/24')
++ subnets=['1.12.1.0/25','1.12.1.128/25','1.12.2.0/24']
++ self.assertEqual(cidr_merge(subnets),['1.12.1.0/24','1.12.2.0/24'])
++ self.assertEqual(cidr_merge(subnets,'span'),'1.12.0.0/22')
++ subnets=['1.12.1.1','1.12.1.255']
++ self.assertEqual(cidr_merge(subnets),['1.12.1.1/32','1.12.1.255/32'])
++ self.assertEqual(cidr_merge(subnets,'span'),'1.12.1.0/24')
+
+Language: python
+Generated Outputs:
+- SLM: cidr_merge example now returns a list of subnets or a single subnet
+
+- ICL: host,
+
+- PEFT: Added cidr_merge filter
+
+- NL: Add cidr_merge filter()
+
+add, filter, cidr merge
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 1
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 679
+Diff:
+class TestUtils:
+
+"""Test utility functions in pipenv"""
+
+- def test_format_toml(self):
+- """Verify that two return characters are used between each section"""
+- data=('[[source]]\nurl="https://pypi.org/simple"\n[dev-packages]\n'
+- 'pytest="*"\nsphinx="*"\n[packages]\nclick="*"\ncrayons="*"')
+-
+- expected=('[[source]]\nurl="https://pypi.org/simple"\n\n'
+- '[dev-packages]\npytest="*"\nsphinx="*"\n\n'
+- '[packages]\nclick="*"\ncrayons="*"')
+-
+- assert pipenv.utils.format_toml(data)==expected
+-
+def test_convert_deps_to_pip(self):
+
+# requests='*'
+
+Language: python
+Generated Outputs:
+- SLM: Remove duplicate test(format_toml)
+
+- ICL: Remove redundant`#`from`pipenv.utils.convert_deps_to_pip`.
+
+- PEFT: Fix test_convert_deps_to_pip()
+
+- NL: god these tests are the worst
+
+test_format_toml, remove 
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 4
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+----------------------------------------
+
+ID: 763
+Diff:
+
+==Chapter 5-Transactions
+===Introduction
+
++ Transactions are the most important part of the bitcoin system.Everything else in bitcoin is there to ensure that transactions can be created,propagated on the network,validated,and finally added to the global ledger of transactions,the blockchain.Transactions are data structures that encode the transfer of value between participants in the bitcoin system.Each transaction is an public entry in bitcoin's global double-entry bookkeeping ledger,the blockchain.
++
++ In this chapter we will examine all the various forms of transactions,what they contain,how to create them and how they are verified and made part of the permanent record of all transactions.
++
+===Transactions and the Blockchain
+
++ Transactions are grouped together into blocks,which are in turn linked in a long chain called the blockchain.This forms the authoritative ledger of all transactions since bitcoin's beginning in 2009.The blockchain is the subject of the next chapter,where we will examine the formation of the authoritative record through the competitive process of proof-of-work,also known as mining.The details of mining will be left for the next chapter.In this chapter,however we will see how transactions relate to the blockchain by tracing their journey from the moment they are created until they are included in the blockchain.
++
+====Transaction Lifecycle
++
++ A transaction's lifecycle starts with the transaction's creation,also known as origination.The transaction is then signed,with one or more signatures indicating the authorization to spend the funds referenced by the transaction.The transaction is then broadcast on the bitcoin network,where each network node(participant)alidates and propagates the transaction until it reaches(almost)every node in the network.Finally,the transaction is verified by a mining node and included in a block of transactions that is recorded on the blockchain.Once recorded on the blockchain and confirmed by sufficient subsequent blocks(confirmations),the transaction is a permanent part of the bitcoin ledger and is accepted as valid by all participants.The funds allocated to a new owner by the transaction can then be spend in a new transaction,extending the chain of ownership and beginning the lifecycle of a transaction again.
++
+=====Creating Transactions
++
++ In some ways it helps to think of a transaction in the same way as a paper cheque.Like a cheque,a transaction is an instrument that expresses the intent to transfer money and is not visible to the financial system until it is submitted for execution.Like a cheque,the originator of the transaction does not have to be the one signing the transaction.Transactions can be created online or offline by anyone,even if they are not able to sign for the funds spent by the check.While a cheque references a specific account as the source of the funds,a transaction references a specific previous transaction as its source(also known as an"input"),rather than an account.
++
++ Once a transaction has been created,it is signed by the owner(or owners)of the source funds.If it was properly formed and signed,the signed transaction is now valid and contains all the information needed to execute the transfer of funds.Now,the valid transaction has to reach the bitcoin network so that it can be propagated until it reaches a miner for inclusion in the pubic ledger,the blockchain.
++
+=====Broadcasting Transactions
++
++ Next,a transaction needs to get on to the bitcoin network so that it can be propagated and eventually executed by inclusion in the blockchain.Since the transaction is signed and contains no confidential information,private keys or credentials,it can be broadcast using any underlying network transport that is convenient.Unlike credit card transactions,for example,which contain sensitive information and can only be transmitted on encrypted networks,a bitcoin transaction can be sent over any network,even broadcast by radio or printed on paper.As long as it can reach a bitcoin node that will propagate it into the bitcoin network,it doesn't matter how it is transported to the first node.In essence,a bitcoin transaction is just 300-400 bytes of data that needs to reach any one of tens of thousands of bitcoin nodes.Bitcoin transactions can therefore be sent to the bitcoin network over insecure networks such as Wifi,Bluetooth,NFC,Chirp,barcodes or by copy and paste in a web form.In extreme cases,a bitcoin transaction could be transmitted over packet radio,satellite relay or shortwave using burst transmission,spread spectrum or frequency hoping to evade detection and jamming.A bitcoin transaction could even be encoded as smileys(emoticons)and posted in a forum or sent as a text message or Skype chat message.It is virtually impossible to stop anyone from sending a bitcoin transaction to the bitcoin network for execution.
++
+=====Validating and Propagating Transactions
++
++
+=====Mining Transactions into Blocks
+
+====Transaction Fees
+
+Language: python
+Generated Outputs:
+- SLM: Edited ch10.asciidoc with Atlas code editor
+
+- ICL: arging stations,and even over the air using radio waves.
+
+- PEFT: Merge pull request from bitcoinbook/master
+
+- NL: ch5 intro
+
+update, ch5, into
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1105
+Diff:
+instance_repr(inst)
+if(func==NULL){
+char buf[140];
+PyObject * classname=inst->in_class->cl_name;
++ PyObject * mod=PyDict_GetItemString(
++ inst->in_class->cl_dict,"__module__");
+char * cname;
+if(classname!=NULL&&PyString_Check(classname))
+cname=PyString_AsString(classname);
+else
+cname="?";
+PyErr_Clear();
+- sprintf(buf,"<%.100s instance at%lx>",cname,(long)inst);
++ if(mod==NULL||!PyString_Check(mod))
++ sprintf(buf,"<?.%.100s instance at%lx>",
++ cname,(long)inst);
++ else
++ sprintf(buf,"<%.50s.%.50s instance at%lx>",
++ PyString_AsString(mod),
++ cname,(long)inst);
+return PyString_FromString(buf);
+}
+res=PyEval_CallObject(func,(PyObject *)NULL);
+
+Language: python
+Generated Outputs:
+- SLM: Added__module__to the string representation of a Python module.
+
+- ICL: Added a new function to find the first index of a value in an array
+
+- PEFT: Fix repr()of instances of classes with a__module__attribute.
+
+- NL: Change the default repr()and str()of class instance objects to look
+
+change, repr, str, instance
+
+Evaluations:
+- Model: SLM
+  Adequacy: 2
+  Conciseness: 3
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 847
+Diff:
+exports.update_messages=function update_messages(events){
+}
+msgs_to_rerender.push(msg);
+
+- msg.alerted=event.flags.indexOf("has_alert_word")!==-1;
+- msg.mentioned=event.flags.indexOf("mentioned")!==-1||
+- event.flags.indexOf("wildcard_mentioned")!==-1;
++ message_store.set_message_booleans(msg,event.flags);
+
+condense.un_cache_message_content_height(msg.id);
+
+
+Language: python
+Generated Outputs:
+- SLM: refactor:Use set_message_booleans event for mentions.
+
+- ICL: Merge pull request from jeannefukumaru/update_message_store
+
+- PEFT: message_store.set_message_booleans()
+
+- NL: Call message.set_message_booleans()in update_messages().
+
+call, set_message_booleans, update_messages
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 81
+Diff:
+different,updated answers each time::
+Besides showing how descriptors can run computations,this example also
+reveals the purpose of the parameters to:meth:`__get__`.The * self *
+parameter is * size *,an instance of * DirectorySize *.The * obj * parameter is
+- either * g * or * s *,an instance of * Directory *.It is * obj * parameter that
++ either * g * or * s *,an instance of * Directory *.It is the * obj * parameter that
+lets the:meth:`__get__` method learn the target directory.The * objtype *
+parameter is the class * Directory *.
+
+logged,but that the regular attribute * name * is not logged::
+INFO:root:Accessing'age'giving 40
+40
+
+- One major issue with this example is the private name *_age * is hardwired in
++ One major issue with this example is that the private name *_age * is hardwired in
+the * LoggedAgeAccess * class.That means that each instance can only have one
+logged attribute and that its name is unchangeable.In the next example,
+we'll fix that problem.
+we'll fix that problem.
+Customized names
+mmmmmmmmmmmmmmm-
+
+- When a class uses descriptors,it can inform each descriptor about what
++ When a class uses descriptors,it can inform each descriptor about which
+variable name was used.
+
+In this example,the:class:` Person ` class has two descriptor instances,
+be recorded,giving each descriptor its own * public_name * and * private_name *::
+
+An interactive session shows that the:class:` Person ` class has called
+:meth:`__set_name__` so that the field names would be recorded.Here
+- we call:func:` vars ` to lookup the descriptor without triggering it::
++ we call:func:` vars ` to look up the descriptor without triggering it::
+
+>>>vars(vars(Person)['name'])
+{'public_name':'name','private_name':'_name'}
+Sometimes it is desirable for a descriptor to know what class variable name it
+was assigned to.When a new class is created,the:class:` type ` metaclass
+scans the dictionary of the new class.If any of the entries are descriptors
+and if they define:meth:`__set_name__`,that method is called with two
+- arguments.The * owner * is the class where the descriptor is used,the * name *
+- is class variable the descriptor was assigned to.
++ arguments.The * owner * is the class where the descriptor is used,and the
++ * name * is the class variable the descriptor was assigned to.
+
+The implementation details are in:c:func:` type_new()` and
+:c:func:` set_names()` in:source:` Objects/typeobject.c `.
+Properties
+mmmmmmmmm-
+
+Calling:func:` property ` is a succinct way of building a data descriptor that
+- triggers function calls upon access to an attribute.Its signature is::
++ triggers a function call upon access to an attribute.Its signature is::
+
+property(fget=None,fset=None,fdel=None,doc=None)->property
+
+roughly equivalent to::
+
+To support automatic creation of methods,functions include the
+:meth:`__get__` method for binding methods during attribute access.This
+- means that functions are non-data descriptors which return bound methods
++ means that functions are non-data descriptors that return bound methods
+during dotted lookup from an instance.Here's how it works::
+
+class Function:
+attributes stored in ` `__slots__` `::
+
+class Immutable:
+
+- __slots__=('_dept','_name')# Replace instance dictionary
++ __slots__=('_dept','_name')# Replace the instance dictionary
+
+def__init__(self,dept,name):
+self._dept=dept # Store to private attribute
+by member descriptors::
+
+The:meth:` type.__new__` method takes care of adding member objects to class
+variables.The:meth:` object.__new__` method takes care of creating instances
+- that have slots instead of a instance dictionary.Here is a rough equivalent
++ that have slots instead of an instance dictionary.Here is a rough equivalent
+in pure Python::
+
+class Type(type):
+
+Language: python
+Generated Outputs:
+- SLM: Issue:Typo fix.
+
+- ICL: Cleanup
+
+- PEFT: Fix typo in descriptors example.
+
+- NL: Minor grammar edits for the descriptor howto guide(GH -)
+
+grammar, edit, descriptor
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 643
+Diff:
+If the users are not from the same organization,you should change your organiza
+
+2.Disable the * * Restrict new users to the following email domains * * option.
+
+- # # Elements that are not mapped one to one
++ # # Slack data elements that are not translated to a corresponding Zulip element
+
+- Non-Gravatar-based avatar.This is not yet implemented by the conversion script.
+- Attachment.This is not yet implemented by the conversion script.
+- Additionally,pinning attachment to a channel is not yet supported by Zulip.
++ (Additionally,Zulip doesn't have an analog of Slack's"pinned
++ attachment"feature).
+- Reactions.This is not yet implemented by the conversion script.
+- -Message edit history.We only keep the latest revision of an edited message.
++ -Message edit history.We only transfer the latest revision of an edited message.
+- Permission hierarchy.They are mapped as follows
+- * ` Primary owner ` and ` owner ` are mapped to ` organization admin `.
+- * ` Admin ` is mapped to ` staff `.
++ * ` Primary owner `,` owner `,and ` Admin ` are mapped to ` organization admin `.
+* ` Member `,` restricted `,and ` ultra restricted ` are mapped to regular user.
+* ` Channel creators ` have no special permission in Zulip.
+- Simultaneous bold and italic formatting of a word.This is not yet supported
+by Zulip's backend markdown.
+- The"joined # channel_name"messages.They are intentionally removed because
+they are spammy.
+- -Zulip does not support default channels which can't be unsubscribed from,but
+- it does include a list of streams where everyone is subscribed to by default
+- when they register.
++ -Zulip's"default streams"work slightly differently from Slack's
++ "Default channels"--new users are automatically subscribed,but
++ users can still unsusbcribe from them.
+
+Language: python
+Generated Outputs:
+- SLM: user docs:Update - Zulip.rst with more notes.
+
+- ICL: Fix the bug
+
+- PEFT: Merge pull request from zulip/slack_to_zulip - 0.1.1
+
+- NL: import:Update the documentation slightly.
+
+Update, documentation
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1928
+Diff:
+alias_for_import_name(struct compiling * c,const node * n)
+return alias(NEW_IDENTIFIER(CHILD(n,0)),NULL,c->c_arena);
+else{
+/* Create a string of the form"a.b.c"*/
+- int i;
++ int i;
+size_t len;
+char * s;
+
+
+Language: python
+Generated Outputs:
+- SLM: :Fix gcc - Wall complaints:-)
+
+- ICL: Fix a bug in alias_for_import_name()
+
+- PEFT: Fix typo in import_from_alias()
+
+- NL: Repair bizarre indentation created by VC 7.1.
+
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 372
+Diff:
+page under'Display Settings'section.
+All the translation magic happens through resource files which hold
+the translated text.Backend resource files are located at
+` static/locale/<lang_code>/LC_MESSAGES/django.po `,while frontend
+- resource files are localted at ` static/locale/<lang_code>/translations.json `.
+- These files are uploaded to Transifex where they are translated.Once
+- translated,they are downloaded back into the codebase.
++ resource files are located at
++ ` static/locale/<lang_code>/translations.json `.These files are
++ uploaded to Transifex using ` tx push `,where they can be
++ translated.Once translated,they are downloaded back into the
++ codebase using ` tx pull `.
+
+# # Transifex Config
+
+
+Language: python
+Generated Outputs:
+- SLM: Properly credit using tx push()
+
+- ICL: Added a new section to the docs.
+
+- PEFT: Merge pull request from zulip/transifex_config
+
+- NL: docs:Cleanup typos and language in translating guide.
+
+Cleanup, docs, typos language
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 816
+Diff:
+def exec_command(self,cmd,tmp_path,sudo_user,sudoable=False):
+while not sudo_output.endswith(prompt):
+chunk=chan.recv(bufsize)
+if not chunk:
+- raise errors.AnsibleError('ssh connection closed waiting for sudo password prompt')
++ if'unknown user'in sudo_output:
++ raise errors.AnsibleError(
++ 'user%s does not exist'%sudo_user)
++ else:
++ raise errors.AnsibleError('ssh connection'+
++ 'closed waiting for password prompt')
+sudo_output+=chunk
+chan.sendall(self.runner.sudo_pass+'\n')
+except socket.timeout:
+
+Language: python
+Generated Outputs:
+- SLM: Raise an error if the user does not exist
+
+- ICL: ssh:add user does not exist error handling()
+
+- PEFT: Fix user does not exist error message
+
+- NL: Merge pull request from willthames/sudo_missing_user
+
+user, fix, exist, ssh
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 609
+Diff:
+new file mode 100644
+index 00000000000..bfe524f97fa
+mmm/dev/null
+
++ .._bokeh.events:
++
++ bokeh.events
++ ============
++
++ ..automodule::bokeh.events
++ :members:
+
+Language: python
+Generated Outputs:
+- SLM: Add reference to bokeh.events
+
+- ICL: DOC:add bokeh.events module()
+
+- PEFT: Added bokeh.events to the docs.
+
+- NL: add missing refguide section
+
+add, docs, bokeh
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 1367
+Diff:
+def run():
+data-directory:%s
+"""%(
+sys.version.split()[0],__version__,
+- args.ip,args.bokeh_port,
++ args.ip,args.port,
+backend_options,
+py_options,
+js_options,
+
+Language: python
+Generated Outputs:
+- SLM: Merge pull request from ContinuumIO/fix_bokeh_port
+
+- ICL: update bokeh server port
+
+- PEFT: Fix bokeh port in bokeh server
+
+- NL: fix broken parameter name
+
+fix, broken, port
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 3
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1808
+Diff:
+Python
+* ` cookiecutter-tryton-fulfilio `_:A template for creating tryton modules.
+* ` cookiecutter-pytest-plugin `_:Minimal Cookiecutter template for authoring ` pytest `_plugins that help you to write better programs.
+* ` cookiecutter-tapioca `_:A Template for building ` tapioca-wrapper `_based web API wrappers(clients).
+- * ` cookiecutter-sublime-text-3-plugin `_:Sublime Text 3 plugin template with custom settings,commands,key bindings and main menu.
+* ` cookiecutter-muffin `_:A Muffin template with Bootstrap 3,starter templates,and working user registration.
+* ` cookiecutter-octoprint-plugin `_:A template for building plugins for ` OctoPrint `_.
+* ` cookiecutter-funkload-friendly `_:Cookiecutter template for a ` funkload-friendly `_project.
+Python
+.._` pytest `:http://pytest.org/latest/
+.._` cookiecutter-tapioca `:https://github.com/vintasoftware/cookiecutter-tapioca
+.._` tapioca-wrapper `:https://github.com/vintasoftware/tapioca-wrapper
+- .._` cookiecutter-sublime-text-3-plugin `:https://github.com/kkujawinski/cookiecutter-sublime-text-3-plugin
+.._` cookiecutter-muffin `:https://github.com/drgarcia1986/cookiecutter-muffin
+.._` cookiecutter-octoprint-plugin `:https://github.com/OctoPrint/cookiecutter-octoprint-plugin
+.._` OctoPrint `:https://github.com/foosel/OctoPrint
+PHP
+.._` cookiecutter-mediawiki-extension `:https://github.com/JonasGroeger/cookiecutter-mediawiki-extension
+
+
++ Sublime Text
++ ~~~~~~~~~~~~
++
++ * ` cookiecutter-sublime-text-3-plugin `_:Sublime Text 3 plugin template with custom settings,commands,key bindings and main menu.
++ * ` sublime-snippet-package-template `_:Template for Sublime Text packages containing snippets.
++
++ .._` cookiecutter-sublime-text-3-plugin `:https://github.com/kkujawinski/cookiecutter-sublime-text-3-plugin
++ .._` sublime-snippet-package-template `:https://github.com/agenoria/sublime-snippet-package-template
++
+Berkshelf-Vagrant
+~~~~~~~~~~~~~~~~~
+
+
+Language: python
+Generated Outputs:
+- SLM: Merge pull request from ellisonbg/patch - 1
+
+- ICL: Merge pull request from eric - wieser/basics - docs
+
+- PEFT: Merge pull request from kkujawinski/master
+
+- NL: Adding sublime - snippet - package - template
+
+add, template, doc
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+----------------------------------------
+
+ID: 918
+Diff:
+between two distinct sections of the code that otherwise share the same
+indentation level(like the arguments list and the docstring in the
+example above).
+
++ If a line of"from"imports cannot fit in the allotted length,it's always split
++ into one per line.Imports tend to change often and this minimizes diffs,as well
++ as enables readers of code to easily find which commit introduced a particular
++ import.This exception also makes * Black * compatible with
++ [isort](https://pypi.org/p/isort/).Use ` multi_line_output=3 ` and
++ ` include_trailing_comma=True ` in your isort config.
++
+
+# # # Line length
+
+More details can be found in[CONTRIBUTING](CONTRIBUTING.md).
+* Black no longer enforces putting empty lines behind control flow statements
+(# 90)
+
++ * Black now splits imports like"Mode 3+trailing comma"of isort(# 127)
++
+* fixed comment indentation when a standalone comment closes a block(# 16,# 32)
+
+* fixed standalone comments receiving extra empty lines if immediately preceding
+def split_line(
+split_funcs:List[SplitFunc]
+if line.is_def:
+split_funcs=[left_hand_split]
++ elif line.is_import:
++ split_funcs=[explode_split]
+elif line.inside_brackets:
+split_funcs=[delimiter_split,standalone_comment_split,right_hand_split]
+else:
+def append_to_line(leaf:Leaf)->Iterator[Line]:
+yield current_line
+
+
++ def explode_split(
++ line:Line,py36:bool=False,omit:Collection[LeafID]=()
++ )->Iterator[Line]:
++ """Split by RHS and immediately split contents by a delimiter."""
++ new_lines=list(right_hand_split(line,py36,omit))
++ if len(new_lines)!=3:
++ yield from new_lines
++ return
++
++ yield new_lines[0]
++ try:
++ yield from delimiter_split(new_lines[1],py36)
++ except CannotSplit:
++ yield new_lines[1]
++
++ yield new_lines[2]
++
++
+def is_import(leaf:Leaf)->bool:
+"""Return True if the given leaf starts an import statement."""
+p=leaf.parent
+
+from..queues import *
+from..streams import *
+
++ from some_library import(
++ Just,Enough,Libraries,To,Fit,In,This,Nice,Split,Which,We,No,Longer,Use
++ )
++
+from.a.b.c.subprocess import *
+from.import(tasks)
+from.import(A,B,C)
+
+from..queues import *
+from..streams import *
+
++ from some_library import(
++ Just,
++ Enough,
++ Libraries,
++ To,
++ Fit,
++ In,
++ This,
++ Nice,
++ Split,
++ Which,
++ We,
++ No,
++ Longer,
++ Use,
++ )
++
+from.a.b.c.subprocess import *
+from.import tasks
+from.import A,B,C
+
+Language: python
+Generated Outputs:
+- SLM: Black now splits imports by RHS and always split into one per line(#127)
+
+- ICL: add a new split function to split imports like isort
+
+- PEFT: Merge pull request from jreese/isort_compat
+
+- NL: Split imports like isort
+
+import, split, isort, 
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 3
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 4
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 2
+
+----------------------------------------
+
+ID: 1494
+Diff:
+
+- import optparse
++ import argparse
+from libmproxy import cmdline
+import tutils
+
+def test_parse_replace_hook():
+)
+
+def test_common():
+- parser=optparse.OptionParser()
++ parser=argparse.ArgumentParser()
+cmdline.common_options(parser)
+- opts,args=parser.parse_args(args=[])
++ opts=parser.parse_args(args=[])
+
+assert cmdline.get_common_options(opts)
+
+
+Language: python
+Generated Outputs:
+- SLM: Fix test_argparse usage
+
+- ICL: bpo - 36324:Improved code formatting for the NormalDist.inv_cdf rational approximation(GH - 12448)
+
+- PEFT: Use argparse instead of optparse.
+
+- NL: Fix unit tests after argparse conversion.
+
+fix, tests, argparse
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 93
+Diff:
+
+ec2_vpc_peer:
+region:ap-southeast-2
+vpc_id:vpc-12345678
+- peer_vpc_id:vpc-87654321
+- peer_vpc_id:vpc-ce26b7ab
++ peer_vpc_id:vpc-12345678
+peer_owner_id:123456789102
+state:present
+register:vpc_peer
+
+ec2_vpc_peer:
+region:ap-southeast-2
+vpc_id:vpc-12345678
+- peer_vpc_id:vpc-87654321
+- peer_vpc_id:vpc-ce26b7ab
++ peer_vpc_id:vpc-12345678
+peer_owner_id:123456789102
+state:present
+register:vpc_peer
+
+ec2_vpc_peer:
+region:ap-southeast-2
+vpc_id:vpc-12345678
+- peer_vpc_id:vpc-87654321
+- peer_vpc_id:vpc-ce26b7ab
++ peer_vpc_id:vpc-12345678
+peer_owner_id:123456789102
+state:present
+register:vpc_peer
+
+Language: python
+Generated Outputs:
+- SLM: Bugfix ec2_vpc_peer:use correct vpc id
+
+- ICL: update vpc_peer
+
+- PEFT: Fix ec2_vpc_peer example
+
+- NL: cloud/amazon/ec2_vpc_peer.py
+
+vpc peer, update
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 3
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 2
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 3
+
+----------------------------------------
+
+ID: 1598
+Diff:
+def access_user_by_api_key(request:HttpRequest,api_key:Text,email:Optional[
+user_profile=get_user_profile_by_api_key(api_key)
+except UserProfile.DoesNotExist:
+raise JsonableError(_("Invalid API key"))
+- if email is not None and email!=user_profile.email:
++ if email is not None and email.lower()!=user_profile.email.lower():
+# This covers the case that the API key is correct,but for a
+# different user.We may end up wanting to relaxing this
+# constraint or give a different error message in the future.
+def test_validate_api_key_if_profile_is_incoming_webhook_and_is_webhook_is_set(s
+is_webhook=True)
+self.assertEqual(profile.id,self.webhook_bot.id)
+
++ def test_validate_api_key_if_email_is_case_insensitive(self)->None:
++ profile=validate_api_key(HostRequestMock(host="zulip.testserver"),self.default_bot.email.upper(),self.default_bot.api_key)
++ self.assertEqual(profile.id,self.default_bot.id)
++
+def test_valid_api_key_if_user_is_on_wrong_subdomain(self)->None:
+with self.settings(RUNNING_INSIDE_TORNADO=False):
+with mock.patch('logging.warning')as mock_warning:
+
+Language: python
+Generated Outputs:
+- SLM: validate_api_key_if_email_is_case_insensitive()
+
+- ICL: [WIP]Add test for validate_api_key()
+
+- PEFT: Validate API key with case insensitive email.
+
+- NL: decorators:Fix email check in access_user_by_api_key case insensitive.
+
+fix, email check, access_user_by_api_key, case insensitive
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 2
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 4
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1857
+Diff:
+def run(command,args,three=None,python=False):
+
+command_path=which(command)
+
+- try:
+- c=os.execl(command_path,command_path,* args)
+- except FileNotFoundError:
++ if not os.path.exists(command_path):
+click.echo(crayons.red('The command({0})was not found within the virtualenv!'.format(command_path)))
+sys.exit(1)
+
+- # Windows!
+- except AttributeError:
++ if os.name=='nt':
++ # Windows!
+import subprocess
+p=subprocess.Popen([command_path]+list(args),shell=True,universal_newlines=True)
+p.communicate()
+sys.exit(p.returncode)
++ else:
++ os.execl(command_path,command_path,* args)
+
+
+@click.command(help="Checks PEP 508 markers provided in Pipfile.")
+
+Language: python
+Generated Outputs:
+- SLM: Fix a small buglet, if you hit^C to run()
+
+- ICL: [WIP]Add PEP 508 checker()
+
+- PEFT: Fixes:Fixes:Pipenv:Fixes:Fixes:Fixes:Fixes:Fixes:Fixes:Fixes:Fixes:Fixes:
+
+- NL: Use subprocess on Windows
+
+subprocess, windows, fix
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 1
+
+----------------------------------------
+
+ID: 880
+Diff:
+For classification,:class:` PassiveAggressiveClassifier ` can be used with
+` ` loss='epsilon_insensitive'` `(PA-I)or
+` ` loss='squared_epsilon_insensitive'` `(PA-II).
+
+- ..topics::References:
++ ..topic::References:
+
+
+* `"Online Passive-Aggressive Algorithms"
+
+Language: python
+Generated Outputs:
+- SLM: Merge pull request from yannigier/master
+
+- ICL: Merge pull request from eric - wieser/basics - docs
+
+- PEFT: Fix typo in docstring
+
+- NL: topics ->topic
+
+typo, topic, fix
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 69
+Diff:
+def__init__(self,base=10,chars=False,starting_min_length=2):
+# with multiple algorithmic envs at once.Also makes testing tricky.
+AlgorithmicEnv.min_length=starting_min_length
+# Three sub-actions:
+- # 1.Move read head left or write(or up/down)
++ # 1.Move read head left or right(or up/down)
+# 2.Write or not
+# 3.Which character to write.(Ignored if should_write=0)
+self.action_space=Tuple(
+
+Language: python
+Generated Outputs:
+- SLM: Fix typo in comment
+
+- ICL: Improve algorithmic env
+
+- PEFT: Merge pull request from jmj/master
+
+- NL: FIx a typo.Replace`left or write`with`left or right`.()
+
+fix, typo, left/wright
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 164
+Diff:
+Core and Builtins
+- Issue # 13521:dict.setdefault()now does only one lookup for the given key,
+making it"atomic"for many purposes.Patch by Filip Gruszczyński.
+
++ -Issue # 1602133:on Mac OS X a shared library build(` `--enable-shared ` `)
++ now fills the ` ` os.environ ` ` variable correctly.
++
+- Issue # 10538:When using the"s *"code with PyArg_ParseTuple()to fill a
+Py_buffer structure with data from an object supporting only the old
+PyBuffer interface,a reference to the source objects is now properly added
+_PyVerify_fd_dup2(int fd1,int fd2)
+# endif
+
+/* Return a dictionary corresponding to the POSIX environment table */
+- # ifdef WITH_NEXT_FRAMEWORK
++ # if defined(WITH_NEXT_FRAMEWORK)||(defined(__APPLE__)&&defined(Py_ENABLE_SHARED))
+/* On Darwin/MacOSX a shared library or framework has no access to
+- * * environ directly,we must obtain it with_NSGetEnviron().
++ * * environ directly,we must obtain it with_NSGetEnviron().See also
++ * * man environ(7).
+*/
+# include<crt_externs.h>
+static char * * environ;
+convertenviron(void)
+d=PyDict_New();
+if(d==NULL)
+return NULL;
+- # ifdef WITH_NEXT_FRAMEWORK
++ # if defined(WITH_NEXT_FRAMEWORK)||(defined(__APPLE__)&&defined(Py_ENABLE_SHARED))
+if(environ==NULL)
+environ=*_NSGetEnviron();
+# endif
+
+Language: python
+Generated Outputs:
+- SLM: Issue:on Mac OS X a shared library build(`- enable - shared`)
+
+- ICL: Fix for issue # 1602133
+
+- PEFT: Issue:Mac OS X shared library build fills os.environ correctly.
+
+- NL: Issue:'environ'is not really available with shared libraries on OSX
+
+issue fix, shared library, Mac OS X, environ
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 46
+Diff:
+new file mode 100644
+index 0000000000000..6786a4a04d490
+mmm/dev/null
+
++ deprecated_features:
++ -hash_behaviour-Deprecate ` ` hash_behaviour ` ` for future removal.
+DEFAULT_HASH_BEHAVIOUR:
+env:[{name:ANSIBLE_HASH_BEHAVIOUR}]
+ini:
+- {key:hash_behaviour,section:defaults}
++ deprecated:
++ why:This feature is fragile and not portable,leading to continual confusion and misuse
++ version:"2.13"
++ alternatives:the ` ` combine ` ` filter explicitly
+DEFAULT_HOST_LIST:
+name:Inventory Source
+default:/etc/ansible/hosts
+
+Language: python
+Generated Outputs:
+- SLM: Deprecate hash_behaviour()
+
+- ICL: Issue:Document that the default inventory source is /etc/ansible/hosts.
+
+- PEFT: Add deprecated feature for hash_behaviour()
+
+- NL: Deprecate hash_behaviour()
+
+Deprecate, behaviour
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 754
+Diff:
+def sysctl_check(current_step,* * sysctl_args):
+# sysctl file exists and openable?
+# TODO choose if prefered to use os.access()instead try/catch on open
+if current_step=='before':
+- try:
+- f=open(sysctl_args['sysctl_file'])
+- f.close()
+- except IOError,e:
+- return 1,'unable to open supplied sysctl.conf'
+-
++ if not os.access(sysctl_args['sysctl_file'],os.W_OK):
++ try:
++ f=open(sysctl_args['sysctl_file'],'w')
++ f.write('')
++ f.close()
++ except IOError,e:
++ return 1,'unable to create supplied sysctl file(directory missing)'
++
+# no smart checks at this step?
+if sysctl_args['checks']=='none':
+return 0,''
+
+Language: python
+Generated Outputs:
+- SLM: Added logic to create and run sysctl file if it doesn't exist
+
+- ICL: BLD:add sysctl check()
+
+- PEFT: Fix sysctl check
+
+- NL: Removes exception is sysctl file is missing
+
+file check, sysctl, exception, remove
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 3
+  Expressiveness: 2
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 3
+
+----------------------------------------
+
+ID: 1755
+Diff:
+def add_widget(child):
+
+self.window.set_default_size(w,h)
+
++ self._destroying=False
+self.window.connect("destroy",lambda * args:Gcf.destroy(self))
+self.window.connect("delete_event",lambda * args:Gcf.destroy(self))
+if mpl.is_interactive():
+def add_widget(child):
+self.canvas.grab_focus()
+
+def destroy(self,* args):
++ if self._destroying:
++ # Otherwise,this can be called twice when the user presses'q',
++ # which calls Gcf.destroy(self),then this destroy(),then triggers
++ # Gcf.destroy(self)once again via
++ # ` connect("destroy",lambda * args:Gcf.destroy(self))`.
++ return
++ self._destroying=True
+self.vbox.destroy()
+self.window.destroy()
+self.canvas.destroy()
+def_onClose(self,event):
+self.canvas.close_event()
+self.canvas.stop_event_loop()
+Gcf.destroy(self)
+- # self.Destroy()
++ if self:
++ self.Destroy()
+
+def GetToolBar(self):
+"""Override wxFrame::GetToolBar as we don't have managed toolbar"""
+def show(self):
+
+def destroy(self,* args):
+_log.debug("%s-destroy()",type(self))
+- self.frame.Destroy()
++ self.frame.Close()
+wxapp=wx.GetApp()
+if wxapp:
+wxapp.Yield()
+def check_alt_backend(alt_backend):
+timer.add_callback(FigureCanvasBase.key_press_event,fig.canvas,"q")
+# Trigger quitting upon draw.
+fig.canvas.mpl_connect("draw_event",lambda event:timer.start())
++ fig.canvas.mpl_connect("close_event",print)
+
+plt.show()
+"""
+def check_alt_backend(alt_backend):
+@pytest.mark.parametrize("backend",_get_testable_interactive_backends())
+@pytest.mark.flaky(reruns=3)
+def test_interactive_backend(backend):
+- proc=subprocess.run([sys.executable,"-c",_test_script],
+- env={* * os.environ,"MPLBACKEND":backend},
+- timeout=_test_timeout)
++ proc=subprocess.run(
++ [sys.executable,"-c",_test_script],
++ env={* * os.environ,"MPLBACKEND":backend},timeout=_test_timeout,
++ stdout=subprocess.PIPE,universal_newlines=True)
+if proc.returncode:
+pytest.fail("The subprocess returned with non-zero exit status"
+f"{proc.returncode}.")
++ assert proc.stdout.count("CloseEvent")==1
+
+
+@pytest.mark.skipif('SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'in os.environ,
+
+Language: python
+Generated Outputs:
+- SLM: Don't call Gcf.destroy()twice in Qt5.
+
+- ICL: Backport PR:Doc:Add a note about the test_interactive_backend() test
+
+- PEFT: Fix:mpl.backends.backend_wx.FigureCanvasWxAgg.destroy()
+
+- NL: Merge pull request from anntzer/closeevent
+
+Widget, fix, destroy
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 3
+
+- Model: ICL
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 3
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 3
+  Expressiveness: 2
+
+----------------------------------------
+
+ID: 1459
+Diff:
+def_do_add_term_test(self,term:Dict[str,Any],where_clause:Text,
+if params is not None:
+actual_params=query.compile().params
+self.assertEqual(actual_params,params)
+- self.assertTrue(where_clause in str(query))
++ self.assertIn(where_clause,str(query))
+
+def_build_query(self,term:Dict[str,Any])->Query:
+return self.builder.add_term(self.raw_query,term)
+
+Language: python
+Generated Outputs:
+- SLM: Fix:use specific assert in add_term_test
+
+- ICL: fix typo
+
+- PEFT: Fix typo in test_add_term_test()
+
+- NL: test_narrow:Use a better assert for easier debugging.
+
+assert, debug, update
+
+Evaluations:
+- Model: SLM
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 970
+Diff:
+def run(self,conn,tmp,module_name,module_args,inject,complex_args=None,* *
+args={}
+if complex_args:
+args.update(complex_args)
+- args.update(utils.parse_kv(module_args))
++ args.update(parse_kv(module_args))
+if not'key'in args:
+raise ae("'key'is a required argument.")
+
+
+Language: python
+Generated Outputs:
+- SLM: utils.parse_kv ->parse_kv
+
+- ICL: Fix typo in docstring
+
+- PEFT: Fix typo in ansible.contrib.hashivault.hashivault
+
+- NL: Fix parse_kv invocation in group_by to use imported name
+
+fix, parse_kv, typo
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 5
+
+- Model: ICL
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 3
+  Expressiveness: 3
+
+----------------------------------------
+
+ID: 1011
+Diff:
+def_helper(self,host=None,port=None,debug=False,
+'backlog':backlog,
+'has_log':has_log,
+'websocket_max_size':self.config.WEBSOCKET_MAX_SIZE,
+- 'websocket_max_queue':self.config.WEBSOCKET_MAX_QUEUE
++ 'websocket_max_queue':self.config.WEBSOCKET_MAX_QUEUE,
++ 'graceful_shutdown_timeout':self.config.GRACEFUL_SHUTDOWN_TIMEOUT
+}
+
+# mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm--#
+def__init__(self,defaults=None,load_env=True,keep_alive=True):
+self.KEEP_ALIVE=keep_alive
+self.WEBSOCKET_MAX_SIZE=2 * * 20 # 1 megabytes
+self.WEBSOCKET_MAX_QUEUE=32
++ self.GRACEFUL_SHUTDOWN_TIMEOUT=15.0 # 15 sec
+
+if load_env:
+self.load_environment_vars()
+def close_if_idle(self):
+return True
+return False
+
++ def close(self):
++ """
++ Force close the connection.
++ """
++ if self.transport is not None:
++ self.transport.close()
++ self.transport=None
++
+
+def update_current_time(loop):
+"""Cache the current time,since it is needed at the end of every
+def serve(host,port,request_handler,error_handler,before_start=None,
+register_sys_signals=True,run_async=False,connections=None,
+signal=Signal(),request_class=None,has_log=True,keep_alive=True,
+is_request_stream=False,router=None,websocket_max_size=None,
+- websocket_max_queue=None,state=None):
++ websocket_max_queue=None,state=None,
++ graceful_shutdown_timeout=15.0):
+"""Start asynchronous HTTP Server on an individual process.
+
+:param host:Address to host on
+def serve(host,port,request_handler,error_handler,before_start=None,
+for connection in connections:
+connection.close_if_idle()
+
+- while connections:
++ # Gracefully shutdown timeout.
++ # We should provide graceful_shutdown_timeout,
++ # instead of letting connection hangs forever.
++ # Let's roughly calcucate time.
++ start_shutdown=0
++ while connections and(start_shutdown<graceful_shutdown_timeout):
+loop.run_until_complete(asyncio.sleep(0.1))
++ start_shutdown=start_shutdown+0.1
++
++ # Force close non-idle connection after waiting for
++ # graceful_shutdown_timeout
++ coros=[]
++ for conn in connections:
++ if hasattr(conn,"websocket")and conn.websocket:
++ coros.append(conn.websocket.close_connection(force=True))
++ else:
++ conn.close()
++
++ _shutdown=asyncio.gather(* coros,loop=loop)
++ loop.run_until_complete(_shutdown)
+
+trigger_events(after_stop,loop)
+
+async def close(self):
+for conn in self.connections:
+conn.close_if_idle()
+
+- while self.connections:
++ # gracefully shutdown timeout
++ start_shutdown=0
++ graceful_shutdown_timeout=self.cfg.graceful_timeout
++ while self.connections and\
++ (start_shutdown<graceful_shutdown_timeout):
+await asyncio.sleep(0.1)
++ start_shutdown=start_shutdown+0.1
++
++ # Force close non-idle connection after waiting for
++ # graceful_shutdown_timeout
++ coros=[]
++ for conn in self.connections:
++ if hasattr(conn,"websocket")and conn.websocket:
++ coros.append(conn.websocket.close_connection(force=True))
++ else:
++ conn.close()
++ _shutdown=asyncio.gather(* coros,loop=self.loop)
++ await_shutdown
+
+async def_run(self):
+for sock in self.sockets:
+def test_run_max_requests_exceeded(worker):
+worker.notify.assert_called_with()
+worker.log.info.assert_called_with("Max requests exceeded,shutting down:%s",
+worker)
++
++ def test_worker_close(worker):
++ loop=asyncio.new_event_loop()
++ asyncio.sleep=mock.Mock(wraps=asyncio.coroutine(lambda * a,* * kw:None))
++ worker.ppid=1
++ worker.pid=2
++ worker.cfg.graceful_timeout=1.0
++ worker.signal=mock.Mock()
++ worker.signal.stopped=False
++ worker.wsgi=mock.Mock()
++ conn=mock.Mock()
++ conn.websocket=mock.Mock()
++ conn.websocket.close_connection=mock.Mock(
++ wraps=asyncio.coroutine(lambda * a,* * kw:None)
++ )
++ worker.connections=set([conn])
++ worker.log=mock.Mock()
++ worker.loop=loop
++ server=mock.Mock()
++ server.close=mock.Mock(wraps=lambda * a,* * kw:None)
++ server.wait_closed=mock.Mock(wraps=asyncio.coroutine(lambda * a,* * kw:None))
++ worker.servers={
++ server:{"requests_count":14},
++ }
++ worker.max_requests=10
++
++ # close worker
++ _close=asyncio.ensure_future(worker.close(),loop=loop)
++ loop.run_until_complete(_close)
++
++ assert worker.signal.stopped==True
++ conn.websocket.close_connection.assert_called_with(force=True)
++ assert len(worker.servers)==0
+
+Language: python
+Generated Outputs:
+- SLM: Set a graceful shutdown timeout to 15s for requests.
+
+- ICL: graceful_shutdown_timeout
+
+- PEFT: Merge pull request from mrjoes/websocket_max_queue
+
+- NL: Merge pull request from yunstanford/master
+
+graceful shutdown, Configuration, Connection 
+
+Evaluations:
+- Model: SLM
+  Adequacy: 3
+  Conciseness: 3
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 3
+  Conciseness: 5
+  Expressiveness: 2
+
+- Model: PEFT
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+----------------------------------------
+
+ID: 1103
+Diff:
+
+plt.savefig(f,format="svg")
+
+
+- import xml.etree.cElementTree as ET
++ import xml.etree.ElementTree as ET
+
+# filter definition for a gaussian blur
+filter_def="""
+
+f=BytesIO()
+plt.savefig(f,format="svg")
+
+- import xml.etree.cElementTree as ET
++ import xml.etree.ElementTree as ET
+
+
+# filter definition for shadow using a gaussian blur
+
+Language: python
+Generated Outputs:
+- SLM: Merge pull request from dominiqueplante/master
+
+- ICL: BLD:fix xml.etree.cElementTree()
+
+- PEFT: Use xml.etree.ElementTree instead of xml.etree.cElementTree.
+
+- NL: Merge pull request from meeseeksmachine/auto - backport - of - pr - 17271 - on - v3.2.x
+
+import, update, ElementTree
+
+Evaluations:
+- Model: SLM
+  Adequacy: 1
+  Conciseness: 1
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 2
+  Conciseness: 2
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 4
+  Conciseness: 5
+  Expressiveness: 5
+
+----------------------------------------
+
+ID: 961
+Diff:
+def printlist(x,width=70,indent=4):
+test_sunaudiodev
+test_threadsignals
+test_timing
++ test_wait3
++ test_wait4
+""",
+'linux2':
+"""
+
+Language: python
+Generated Outputs:
+- SLM: Added test_wait3 and test_wait4 to tests expected to be
+
+- ICL: Added test_wait3 and test_wait4
+
+- PEFT: Add test_wait3 and test_wait4 to the list of tests run on Linux.
+
+- NL: Record that test_wait[34]get skipped on native Windows.
+
+add, test_wait3&4
+
+Evaluations:
+- Model: SLM
+  Adequacy: 5
+  Conciseness: 4
+  Expressiveness: 4
+
+- Model: ICL
+  Adequacy: 5
+  Conciseness: 5
+  Expressiveness: 4
+
+- Model: PEFT
+  Adequacy: 5
+  Conciseness: 4
+  Expressiveness: 5
+
+----------------------------------------
+
